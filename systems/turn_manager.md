@@ -6,7 +6,7 @@ mcrf:
   diataxis: explanation
   disposition: current
   verified: "0.2.9-dev"
-  verified_commit: b6720f6
+  verified_commit: 336f00e
 ---
 
 # Turn Manager
@@ -120,7 +120,7 @@ for enemy in pack:
     enemy.set_behavior(mcrfpy.Behavior.SEEK, pathfinder=dm)
 ```
 
-`get_dijkstra_map()` caches maps per root position and rebuilds one after walkability changes. A map handed to an entity is a snapshot, so when the target moves or the map changes, hand the entity a freshly requested map (see the chase example below).
+`get_dijkstra_map()` caches maps per root position and rebuilds one after walkability changes. A map handed to an entity is a snapshot, so when the target moves or the map changes, hand the entity a freshly requested map (see the chase example below). A map built with `radius=` covers only a window around its root; an entity outside it still SEEKs (or FLEEs, on an inverted map) by greedy steps until it reaches the window.
 
 ---
 

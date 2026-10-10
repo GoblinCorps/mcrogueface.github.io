@@ -6,7 +6,7 @@ mcrf:
   diataxis: reference
   disposition: current
   verified: "0.3.0-dev"
-  verified_commit: 73acab0
+  verified_commit: 336f00e
 ---
 
 # DijkstraMap
@@ -15,7 +15,7 @@ Dijkstra distance map from a fixed root position.
 
 ## Overview
 
-A `DijkstraMap` represents precomputed distances from a root position to all reachable cells in a Grid. It is created by `Grid.get_dijkstra_map()` and cannot be instantiated directly. Dijkstra maps are useful for AI pathfinding, influence maps, and flow-field navigation where multiple entities need to path toward the same goal.
+A `DijkstraMap` represents precomputed distances from a root position to the reachable cells of a window of a Grid (by default the whole grid, up to a radius of 511). It is created by `Grid.get_dijkstra_map()` and cannot be instantiated directly. Dijkstra maps are useful for AI pathfinding, influence maps, and flow-field navigation where multiple entities need to path toward the same goal.
 
 ## Quick Reference
 
@@ -34,8 +34,12 @@ next_pos = dijkstra.step_from(enemy)
 if next_pos:
     enemy.grid_pos = next_pos
 
-# Convert to heightmap for visualization
+# Convert to heightmap for visualization (window-sized; see "Windowed maps")
 heightmap = dijkstra.to_heightmap()
+
+# Is this answer exact, or the heuristic's estimate? (see "Windowed maps")
+if not dijkstra.is_exact(enemy):
+    ...
 ```
 
 ## Constructor
@@ -47,24 +51,50 @@ heightmap = dijkstra.to_heightmap()
 dijkstra = grid.get_dijkstra_map((goal_x, goal_y))
 ```
 
-Dijkstra maps are cached by the Grid. Calling `get_dijkstra_map()` with the same root position returns the cached map while the grid is unchanged; after a walkability edit it returns a rebuilt one. A map you hold is a snapshot: it keeps its distances, and stays usable after the grid is gone. The cache is capped at `grid.dijkstra_cache_budget` bytes.
+Dijkstra maps are cached by the Grid. Calling `get_dijkstra_map()` with the same root position returns the cached map while the grid is unchanged; after a walkability edit it returns a rebuilt one. A map you hold is a snapshot: it keeps its distances, and stays usable after the grid is gone. The cache is capped at `grid.dijkstra_cache_budget` bytes, and keyed by root, `collide`, `diagonal_cost`, `radius` and `heuristic`.
 
 ## Properties
 
 | Property | Type | Description |
 |----------|------|-------------|
 | `root` | Vector | Goal position, read-only |
+| `radius` | int | Radius of the field's window around the roots, read-only |
+| `window` | tuple | `(x, y, w, h)`: the grid rectangle the field covers, read-only |
+| `complete` | bool | True if the field holds the roots' whole reachable region, read-only |
+| `heuristic` | Heuristic or None | The estimate used beyond the field, read-only |
 
 ## Methods
 
 | Method | Description |
 |--------|-------------|
-| `distance(pos)` | Get distance from pos (Vector, Entity, or (x, y) tuple) to root, or `None` if unreachable |
-| `path_from(pos)` | Get complete path from pos to root as an `AStarPath`, ordered from `pos` toward the root (`origin` is `pos`, `destination` is the root) |
-| `step_from(pos)` | Get next step toward root as a Vector (always a cell adjacent to `pos`), or `None` if at root/unreachable |
+| `distance(pos)` | Get distance from pos (Vector, Entity, or (x, y) tuple) to root, or `None` if unreachable. Beyond the field, or off the grid, the heuristic's estimate |
+| `is_exact(pos)` | `True` if `distance(pos)` is exact (or certainly unreachable), `False` if it is an estimate |
+| `path_from(pos)` | Get complete path from pos to root as an `AStarPath`, ordered from `pos` toward the root (`origin` is `pos`, `destination` is the root); `None` beyond the field |
+| `step_from(pos)` | Get next step toward root as a Vector (always a cell adjacent to `pos`), or `None` if at root/unreachable. Beyond the field, a greedy step toward it |
 | `descent_step(pos)` | Get the adjacent cell with the lowest distance (steepest single-hop descent) |
 | `invert()` | Return a new `DijkstraMap` with distances inverted (a "flee" field), root unchanged |
-| `to_heightmap(size=None, unreachable=-1.0)` | Convert distances to a `HeightMap` for visualization |
+| `to_heightmap(size=None, unreachable=-1.0)` | Convert distances to a `HeightMap` for visualization. Window-sized: cell (0, 0) is grid cell `window[:2]` |
+
+## Windowed maps
+
+`get_dijkstra_map(root, radius=None, heuristic=mcrfpy.Heuristic.OCTILE)` computes the field over a window: the roots' bounding box grown by `radius`, clipped to the grid (so it is off-centre near an edge). The default radius is the whole grid up to 511, a field of at most 1023 x 1023 cells at 4 bytes each; on a grid up to 1023 on a side the window is the whole grid, as it always was.
+
+- Distances up to the radius are exact (`radius * diagonal_cost` if `diagonal_cost` is below 1). If the flood stayed inside the window, `complete` is `True`: every distance is exact and every other cell is certainly unreachable (`None`), off the grid included.
+- Otherwise, beyond the radius and off the grid, `distance()` returns the heuristic's estimate (a lower bound, never below the radius) and `is_exact()` is `False`. Build the map with `heuristic=None` to make those queries raise `IndexError` instead.
+- `step_from()` / `descent_step()`, and SEEK/FLEE behaviors, take a greedy step toward the field (away, on an inverted map); this needs the grid to still exist. `path_from()` returns `None` there.
+- Place `to_heightmap()` on a grid-sized `HeightMap` with `full.copy_from(dijkstra.to_heightmap(), pos=dijkstra.window[:2])`.
+
+```python
+# A 129 x 129 field around the player on a 4000 x 4000 grid
+dm = grid.get_dijkstra_map(player.cell_pos, radius=64)
+print(dm.window)                       # (1936, 1936, 129, 129) for a player at (2000, 2000)
+dm.distance((2010, 2005))              # 12.05, exact
+dm.distance((2500, 2500))              # 705.0, the OCTILE estimate
+dm.is_exact((2500, 2500))              # False
+dm.step_from((2500, 2500))             # Vector(2499, 2499): a greedy step toward the field
+```
+
+On an 8192 x 8192 grid (the largest a grid can be), a default map builds in about 45 ms and holds 4 MB; a whole-grid map took about 6 s and 268 MB.
 
 ## Usage Patterns
 

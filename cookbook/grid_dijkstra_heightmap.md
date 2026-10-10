@@ -4,7 +4,7 @@ mcrf:
   diataxis: howto
   disposition: current
   verified: "0.2.8-dev"
-  verified_commit: 3a85dd8
+  verified_commit: 336f00e
 ---
 
 # Dijkstra to HeightMap Conversion
@@ -61,8 +61,15 @@ distance = dijkstra.distance((x, y))
 ### Converting to HeightMap
 
 ```python
-# Basic conversion - same size as dijkstra map
+# Basic conversion - the size of the map's window (the whole grid, unless the
+# grid is over 1023 on a side or you passed radius=)
 hmap = dijkstra.to_heightmap()
+
+# A windowed map's heightmap starts at dijkstra.window[:2]; place it on a
+# grid-sized HeightMap with copy_from
+full = mcrfpy.HeightMap((grid_w, grid_h))
+full.fill(-1.0)
+full.copy_from(dijkstra.to_heightmap(), pos=dijkstra.window[:2])
 
 # Custom unreachable value (default is -1.0)
 hmap = dijkstra.to_heightmap(unreachable=0.0)

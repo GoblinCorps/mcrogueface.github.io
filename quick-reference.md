@@ -6,7 +6,7 @@ mcrf:
   diataxis: reference
   disposition: current
   verified: "0.3.0-dev"
-  verified_commit: 73acab0
+  verified_commit: 336f00e
 ---
 
 # McRogueFace Quick Reference
@@ -267,7 +267,10 @@ dijkstra = grid.get_dijkstra_map(root=(11, 7))
 dist = dijkstra.distance((2, 2))
 next_cell = dijkstra.step_from((2, 2))   # one step toward the root
 full_path = dijkstra.path_from((2, 2))   # AStarPath to the root
-heightmap = dijkstra.to_heightmap()      # for procgen and visualization
+heightmap = dijkstra.to_heightmap()      # for procgen and visualization (window-sized)
+near = grid.get_dijkstra_map((11, 7), radius=3)    # bounded field (for big grids)
+near.window                              # (8, 4, 7, 7)
+near.is_exact((19, 7))                   # False: distance() there is an OCTILE estimate
 ```
 
 ## Audio

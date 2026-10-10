@@ -4,7 +4,7 @@ mcrf:
   diataxis: howto
   disposition: current
   verified: "0.3.0-dev"
-  verified_commit: 73acab0
+  verified_commit: 336f00e
 ---
 
 # Pathfinding
@@ -127,6 +127,12 @@ if distance is not None:
 else:
     print("Position is unreachable")
 ```
+
+On large grids a map covers a window around the root: `radius=` (default: the whole grid, up
+to 511, i.e. at most 1023 x 1023 cells). Distances up to the radius are exact; past it, and
+off the grid, `distance()` returns the `heuristic=` estimate (`Heuristic.OCTILE` by default)
+and `dijkstra.is_exact(pos)` is `False`. See [DijkstraMap](../objects/DijkstraMap) for the
+details. Grids up to 1023 on a side always get a whole-grid map.
 
 ### Getting Paths from Dijkstra
 
@@ -454,8 +460,13 @@ grid.center = player.pos
   `get_dijkstra_map()` again with the same root is cheap, and a walkability change
   makes the next call rebuild it. The cache is capped at `grid.dijkstra_cache_budget`
   bytes. Multi-source maps (`roots=[...]`) are never cached.
+  The key includes `radius` and `heuristic`.
 - **Path Length**: Very long paths are expensive. Consider limiting search distance for AI.
-- **Grid Size**: Pathfinding on large grids (100x100+) may need optimization strategies.
+- **Grid Size**: A Dijkstra map costs a flood of its window, at most 1023 x 1023 by default
+  (about 45 ms and 4 MB, even on an 8192 x 8192 grid). Pass a smaller `radius=` when entities
+  only chase nearby targets; those farther out still get a greedy step toward the field.
+  `find_path()` also accepts `heuristic=mcrfpy.Heuristic.OCTILE`, octile distance for the
+  path's own `diagonal_cost`.
 
 ## Notes and Caveats
 

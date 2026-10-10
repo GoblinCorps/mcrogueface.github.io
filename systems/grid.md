@@ -162,14 +162,16 @@ for x, y in path:
 Compute distance from a point to all reachable tiles:
 
 ```python
-grid.compute_dijkstra(goal_x, goal_y)
+dm = grid.get_dijkstra_map((goal_x, goal_y))   # radius=, heuristic= for big grids
 
-# Get distance to any tile
-distance = grid.get_dijkstra_distance(x, y)
+# Get distance to any tile (an estimate beyond the map's field; see dm.is_exact)
+distance = dm.distance((x, y))
 
-# Get direction toward goal
-dx, dy = grid.get_dijkstra_step(x, y)
+# Get the next step toward the goal
+step = dm.step_from((x, y))
 ```
+
+See [DijkstraMap](../objects/DijkstraMap).
 
 ### Entity Collision
 

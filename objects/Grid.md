@@ -6,7 +6,7 @@ mcrf:
   diataxis: reference
   disposition: needs-review
   verified: "0.2.8-dev"
-  verified_commit: 3a85dd8
+  verified_commit: 336f00e
 ---
 
 # Grid
@@ -112,7 +112,7 @@ mcrfpy.Grid(pos=None, size=None, grid_size=None, texture=None, **kwargs)
 | `compute_fov(pos, radius=0, light_walls=True, algorithm=FOV.BASIC)` | Calculate field of view from a position |
 | `is_in_fov(x, y)` | Check if tile is visible in current FOV |
 | `find_path(start, end)` | Compute A* path, returns AStarPath (or None) |
-| `get_dijkstra_map(root)` | Get/create Dijkstra map from position |
+| `get_dijkstra_map(root, diagonal_cost=1.41, collide=None, roots=None, radius=None, heuristic=Heuristic.OCTILE)` | Get/create Dijkstra map over a window around the root(s) (default: whole grid, up to radius 511) |
 | `entities_in_radius(pos, radius)` | Get entities within radius |
 | `apply_threshold(heightmap, ...)` | Apply heightmap threshold to grid |
 | `apply_ranges(heightmap, ...)` | Apply heightmap ranges to grid |

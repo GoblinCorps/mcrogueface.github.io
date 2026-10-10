@@ -8,7 +8,7 @@ mcrf:
   diataxis: howto
   disposition: needs-review
   verified: "0.3.0-dev"
-  verified_commit: 73acab0
+  verified_commit: 336f00e
 ---
 
 # Dijkstra Distance Maps
@@ -350,6 +350,19 @@ The grid already caches single-source maps by root position, so calling
 first call for a root, and the first call after the map changes. So ask for the map
 every turn rather than holding on to one: a held `DijkstraMap` is a snapshot and
 won't see later edits.
+
+On a big grid, pass `radius=` to bound the field to what your AI needs (default: the
+whole grid, up to 511). Entities outside the field still get a greedy step from
+`step_from()`, and `dijkstra.is_exact(pos)` tells you whether `distance(pos)` is exact
+or the heuristic's estimate:
+
+```python
+dijkstra = grid.get_dijkstra_map(player.grid_pos, radius=64)
+for enemy in enemies:
+    if not dijkstra.is_exact(enemy.grid_pos):
+        continue  # far away: let it idle, or take the greedy step_from()
+    step = dijkstra.step_from(enemy.grid_pos)
+```
 
 The cache bounds its own memory: maps are capped at `grid.dijkstra_cache_budget`
 bytes (default 256 MiB; each map costs 4 bytes per cell), least recently used
