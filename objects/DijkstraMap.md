@@ -47,7 +47,7 @@ heightmap = dijkstra.to_heightmap()
 dijkstra = grid.get_dijkstra_map((goal_x, goal_y))
 ```
 
-Dijkstra maps are cached by the Grid. Calling `get_dijkstra_map()` with the same root position returns the cached map. Use `grid.clear_dijkstra_maps()` to invalidate the cache when the grid's walkability changes.
+Dijkstra maps are cached by the Grid. Calling `get_dijkstra_map()` with the same root position returns the cached map while the grid is unchanged; after a walkability edit it returns a rebuilt one. A map you hold is a snapshot: it keeps its distances, and stays usable after the grid is gone. The cache is capped at `grid.dijkstra_cache_budget` bytes.
 
 ## Properties
 
@@ -143,12 +143,9 @@ color_layer.apply_gradient(
 map1 = grid.get_dijkstra_map((10, 10))
 map2 = grid.get_dijkstra_map((10, 10))  # Returns cached map
 
-# Clear cache when grid changes
+# Changing the grid: the next request is rebuilt
 grid.at(5, 5).walkable = False
-grid.clear_dijkstra_maps()  # Invalidate all cached maps
-
-# New maps will reflect updated walkability
-map3 = grid.get_dijkstra_map((10, 10))  # Recomputed
+map3 = grid.get_dijkstra_map((10, 10))  # Recomputed against the new wall
 ```
 
 ## Related

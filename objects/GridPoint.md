@@ -151,7 +151,7 @@ class Door:
 
 - GridPoint properties directly affect pathfinding algorithms (`Grid.find_path()`, `Grid.get_dijkstra_map()`)
 - The `transparent` property affects FOV calculations (`Grid.compute_fov()`, `Grid.is_in_fov()`)
-- Changes to `walkable` require calling `Grid.clear_dijkstra_maps()` to invalidate cached pathfinding data
+- Changes to `walkable` are picked up by the next `find_path()` / `get_dijkstra_map()` call; there is no cache to invalidate by hand
 - Entity collision is separate from `walkable` - entities can occupy the same cell unless your game logic prevents it
 
 ## Related

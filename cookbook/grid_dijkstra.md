@@ -27,8 +27,9 @@ Dijkstra maps (also called "distance fields") provide:
 
 In mcrfpy, a Dijkstra map is a `DijkstraMap` object returned by
 `grid.get_dijkstra_map(root)`. The grid caches maps by their root position — calling
-`get_dijkstra_map` again with the same root returns the same object. Call
-`grid.clear_dijkstra_maps()` after you change walkability to invalidate the cache.
+`get_dijkstra_map` again with the same root returns the same object, for as long as
+the grid is unchanged. After a walkability edit (or, for `collide=`, a labelled entity
+moving) the next call returns a rebuilt map; there is nothing to invalidate by hand.
 
 ---
 
@@ -327,12 +328,12 @@ def compute_safe_dijkstra(grid, player, goal_pos):
                 original_walkable[(x, y)] = point.walkable
                 point.walkable = False
 
-    grid.clear_dijkstra_maps()  # invalidate any stale cached maps
-    dijkstra = grid.get_dijkstra_map(goal_pos)
+    dijkstra = grid.get_dijkstra_map(goal_pos)  # built against the masked terrain
 
     for (x, y), walkable in original_walkable.items():
         grid.at(x, y).walkable = walkable
-    grid.clear_dijkstra_maps()  # restore real walkability for future queries
+    # The map we hold is a snapshot, so it keeps the explored-only distances;
+    # the next get_dijkstra_map() call sees the real walkability again.
 
     return dijkstra
 ```
@@ -346,18 +347,14 @@ def compute_safe_dijkstra(grid, player, goal_pos):
 
 The grid already caches single-source maps by root position, so calling
 `get_dijkstra_map(same_root)` repeatedly is cheap — the expensive part is the
-first call after a cache miss, and after `clear_dijkstra_maps()`:
+first call for a root, and the first call after the map changes. So ask for the map
+every turn rather than holding on to one: a held `DijkstraMap` is a snapshot and
+won't see later edits.
 
-```python
-def get_or_refresh(grid, root):
-    """Grid.get_dijkstra_map already caches by root; this just documents that."""
-    return grid.get_dijkstra_map(root)
-
-
-# Call this whenever walkability changes (walls placed/removed, doors, etc.)
-def on_map_changed(grid):
-    grid.clear_dijkstra_maps()
-```
+The cache bounds its own memory: maps are capped at `grid.dijkstra_cache_budget`
+bytes (default 256 MiB; each map costs 4 bytes per cell), least recently used
+first, and `grid.dijkstra_cache_bytes` reports current use. On a very large grid
+raise the budget if several roots should stay cached.
 
 Multi-source maps (`roots=[...]`) are **not** cached, since the source set can
 be different on every call — if you query the same multi-source map
@@ -368,8 +365,8 @@ rather than calling `get_dijkstra_map(roots=...)` again.
 
 ## Tips
 
-1. **Caching**: single-root maps are cached automatically; call
-   `grid.clear_dijkstra_maps()` after changing walkability.
+1. **Caching**: single-root maps are cached automatically and are always
+   current; request the map again after changing walkability.
 2. **Multiple sources**: pass `roots=[...]` for one map whose distance is to
    the nearest of several sources, instead of computing and merging maps by hand.
 3. **`step_from` vs `descent_step`**: `step_from` follows a precomputed path

@@ -82,9 +82,10 @@ for x in range(10, 25):
 path = entity.path_to(20, 20)  # Will route around the obstacle
 ```
 
-After changing any cell's `walkable` state, call `grid.clear_dijkstra_maps()` to
-invalidate cached Dijkstra maps (A* via `find_path`/`path_to` always recomputes fresh,
-but Dijkstra maps are cached by root position).
+Changing any cell's `walkable` state needs no follow-up call: `find_path`/`path_to`
+always recompute, and a cached Dijkstra map is rebuilt on the next
+`get_dijkstra_map()` request. A `DijkstraMap` you already hold is a snapshot, so
+request it again after the change.
 
 ### Error Handling
 
@@ -450,9 +451,9 @@ grid.center = player.pos
   single paths. Use Dijkstra (`grid.get_dijkstra_map`) when multiple entities need paths
   to the same target, since the map is computed once and reused.
 - **Caching**: Single-root Dijkstra maps are cached by root position — calling
-  `get_dijkstra_map()` again with the same root is cheap. Call
-  `grid.clear_dijkstra_maps()` after changing any cell's `walkable` state to invalidate
-  stale cached maps. Multi-source maps (`roots=[...]`) are never cached.
+  `get_dijkstra_map()` again with the same root is cheap, and a walkability change
+  makes the next call rebuild it. The cache is capped at `grid.dijkstra_cache_budget`
+  bytes. Multi-source maps (`roots=[...]`) are never cached.
 - **Path Length**: Very long paths are expensive. Consider limiting search distance for AI.
 - **Grid Size**: Pathfinding on large grids (100x100+) may need optimization strategies.
 

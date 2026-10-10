@@ -262,7 +262,7 @@ if path:
     step = path.walk()    # consume one step
     left = path.remaining
 
-# Dijkstra maps (cached per root; cleared with grid.clear_dijkstra_maps())
+# Dijkstra maps (cached per root; rebuilt automatically after walkability edits)
 dijkstra = grid.get_dijkstra_map(root=(11, 7))
 dist = dijkstra.distance((2, 2))
 next_cell = dijkstra.step_from((2, 2))   # one step toward the root
@@ -393,4 +393,4 @@ caption.fill_color = mcrfpy.Color(255, 255, 255)
 - **Alignment not working**: Element must be in the parent's `children` before setting `align`
 - **Click handler never fires**: The property is `on_click` (signature `(pos, button, action)`), not `click`
 - **Caption font won't change**: `font` is read-only after construction - pass `font=` to the constructor
-- **Pathfinding stale after digging**: Call `grid.clear_dijkstra_maps()` after changing walkability
+- **Pathfinding stale after digging**: You're holding an old `DijkstraMap` (a snapshot) - call `grid.get_dijkstra_map()` again

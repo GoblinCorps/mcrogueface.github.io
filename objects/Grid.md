@@ -113,7 +113,6 @@ mcrfpy.Grid(pos=None, size=None, grid_size=None, texture=None, **kwargs)
 | `is_in_fov(x, y)` | Check if tile is visible in current FOV |
 | `find_path(start, end)` | Compute A* path, returns AStarPath (or None) |
 | `get_dijkstra_map(root)` | Get/create Dijkstra map from position |
-| `clear_dijkstra_maps()` | Clear cached Dijkstra maps |
 | `entities_in_radius(pos, radius)` | Get entities within radius |
 | `apply_threshold(heightmap, ...)` | Apply heightmap threshold to grid |
 | `apply_ranges(heightmap, ...)` | Apply heightmap ranges to grid |
