@@ -6,7 +6,7 @@ mcrf:
   diataxis: reference
   disposition: current
   verified: "0.3.0-dev"
-  verified_commit: 73acab0
+  verified_commit: bdf0a69
 ---
 
 # Timer
@@ -73,11 +73,39 @@ The callback receives two arguments:
 ```python
 def my_callback(timer, runtime):
     # timer: the Timer instance that fired
-    # runtime: engine time in milliseconds when the timer fired
+    # runtime: this firing's scheduled deadline, in engine milliseconds
     pass
 ```
 
+`runtime` is when the firing was *due*, not when the frame that ran it happened. A 100 ms timer reports 100, 200, 300, ... however late each frame is.
+
 In headless mode, timers run on simulation time: they fire only as `mcrfpy.step(dt)` / `mcrfpy.advance(ms)` move the simulation clock, and the same script produces the same firings every run.
+
+### Late frames: timers catch up
+
+If a frame comes late (a wide `mcrfpy.step()`, or a stalled windowed frame), a repeating timer fires once for **each** interval that elapsed, all within that frame, each call receiving its own deadline. The leftover time carries over, so the timer keeps its phase:
+
+```python
+import mcrfpy
+import sys
+
+mcrfpy.current_scene = mcrfpy.Scene("catchup")
+fires = []
+t = mcrfpy.Timer("tick", lambda timer, runtime: fires.append(runtime), 1000)
+
+mcrfpy.step(10.5)   # one frame, 10.5 simulated seconds
+print(fires)        # [1000, 2000, ..., 10000] -- each call gets its own deadline
+print(t.remaining)  # 500 -- the residual is kept, so the timer stays in phase
+mcrfpy.step(0.5)
+print(fires[-1])    # 11000
+t.stop()
+sys.exit(0)
+```
+
+- Calling `stop()`, `pause()` or `restart()` from the callback ends the catch-up at once.
+- If the callback raises, this frame's catch-up ends; the remaining firings happen next frame.
+- A `once=True` timer fires once, at its deadline, however late.
+- A timer much faster than the frame rate fires several times per frame. If you want one call per frame, use an interval no shorter than a frame.
 
 ## Properties
 

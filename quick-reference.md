@@ -181,7 +181,8 @@ grid.on_cell_exit = lambda cell_pos: None
 ```python
 def update(timer, runtime):
     # timer: the Timer object
-    # runtime: total elapsed time in MILLISECONDS
+    # runtime: this firing's scheduled deadline, in MILLISECONDS
+    #          (a late frame fires a repeating timer once per missed interval)
     player.update()
 
 # Interval is in milliseconds
@@ -328,8 +329,10 @@ snap["tick"], snap["mask"], snap["walkable"], snap["transparent"], snap["entitie
 ## Background Threads
 
 Touch engine objects from a worker thread only inside `with mcrfpy.lock():` -
-mutation only, with I/O outside the block. Calling `mcrfpy.step()` or
-`mcrfpy.advance()` while holding the lock raises `RuntimeError`.
+mutation only, with I/O outside the block. Only the thread that drives the clock
+(the first to run a frame, normally the main thread) may call `mcrfpy.step()` or
+`mcrfpy.advance()`; from any other thread, or while holding the lock, they raise
+`RuntimeError`.
 
 ## Common Patterns
 

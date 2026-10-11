@@ -5,7 +5,7 @@ mcrf:
   diataxis: howto
   disposition: current
   verified: "0.3.0-dev"
-  verified_commit: 73acab0
+  verified_commit: bdf0a69
 ---
 
 # Headless Mode
@@ -67,19 +67,23 @@ print(f"Advanced {dt} seconds to next event")
 `step()` runs one full simulation frame:
 
 1. Advances the simulation clock by the specified duration
-2. Runs the scene update, timers whose intervals have elapsed, and Python `Scene.update()` callbacks
-3. Updates all active animations and scene transitions (including their completion)
+2. Runs the scene update, timers whose intervals have elapsed (once per elapsed interval, so a wide step catches a timer up), and Python `Scene.update()` callbacks
+3. Updates all active animations and scene transitions (including their completion) with the whole `dt`
 4. Records frame-time metrics and increments the frame counter
 5. Does NOT render or process input (call `screenshot()` to trigger a render)
 
-To let a span of simulated time pass with timer intervals honored, use `advance()`:
+`dt` must be finite and `>= 0`: a negative, NaN or infinite value raises `ValueError`, and one past the clock's range raises `OverflowError`. Use `step(None)` for "next event".
+
+To let a span of simulated time pass as a series of frames, one at each timer deadline, use `advance()`:
 
 ```python
 mcrfpy.advance(2500)   # int MILLISECONDS (step() takes float seconds)
 print(mcrfpy.get_metrics()["simulation_time_ms"])  # simulated ms; "runtime" is wall-clock seconds
 ```
 
-`advance(ms)` is headless-only; `ms` must be an int >= 0. Prefer `step()` for single-frame control and `advance()` for moving the clock across a longer span.
+`advance(ms)` is headless-only; `ms` must be an int >= 0. Both `step()` and `advance()` fire every timer interval in the span. The difference is frames: `step()` covers the span in one frame, while `advance()` runs a frame at each timer deadline, so animations and `Scene.update()` also see the time between firings.
+
+Only one thread may run frames: the first thread that calls `step()`/`advance()` (normally the main thread) owns the clock until it exits, and calls from any other thread raise `RuntimeError`. Other threads change the world inside `with mcrfpy.lock():` instead.
 
 ### Reproducible runs
 
@@ -94,7 +98,7 @@ print(mcrfpy.get_random_seed())  # 1234; record this to replay an unseeded run
 
 ## Timers in Headless Mode
 
-Timers run on simulation time in headless mode, so they fire deterministically. Timer callbacks receive `(timer_object, runtime_ms)`:
+Timers run on simulation time in headless mode, so they fire deterministically. Timer callbacks receive `(timer_object, runtime_ms)`, where `runtime_ms` is the firing's scheduled deadline:
 
 ```python
 import mcrfpy
@@ -114,7 +118,7 @@ t = mcrfpy.Timer("my_timer", on_timer, 500)
 mcrfpy.step(0.6)  # 600ms - timer will fire
 
 if fired[0]:
-    print("Success!")
+    print("Success!")   # printed "Timer fired at 500ms": the deadline, not 600
 
 t.stop()  # Clean up timer
 ```
@@ -290,13 +294,14 @@ for i in range(100):
 - `mcrfpy.step(dt=None)` - Run one full simulation frame
   - `dt` (float or None): Seconds to advance, or None for next event
   - Returns: Actual time advanced (float)
-  - In windowed mode: Returns 0.0 (no-op)
-  - Raises `RuntimeError` if called from a background thread holding `mcrfpy.lock()`
-- `mcrfpy.advance(ms)` - Advance the simulation clock by `ms` milliseconds (int >= 0, headless only)
+  - In windowed mode: Returns 0.0 (no-op; decoupling the clock from the window is #448)
+  - Raises `ValueError` for a negative, NaN or infinite `dt`, `OverflowError` past the clock's range
+  - Raises `RuntimeError` if called from a background thread holding `mcrfpy.lock()`, or from a thread that does not drive the clock
+- `mcrfpy.advance(ms)` - Advance the simulation clock by `ms` milliseconds (int >= 0, headless only), one frame per timer deadline; same `RuntimeError`s, `OverflowError` past the clock's range
 - `mcrfpy.get_metrics()["simulation_time_ms"]` - Simulated milliseconds (`"runtime"` is wall-clock seconds)
 - `mcrfpy.set_random_seed(n)` / `mcrfpy.get_random_seed()` - Seed / read the engine's random streams
 
-A headless `--exec` script must end with `sys.exit()`, since `step()`/`advance()` are the only headless clock; pass `--run-forever` for a long-lived self-driving headless process.
+A headless `--exec` script must end with `sys.exit()`, since `step()`/`advance()` are the only headless clock; pass `--run-forever` to keep a headless process alive after its scripts finish. That loop does not move the simulation clock (#448), and it refuses to start if a background thread already drives the clock.
 
 **Automation Functions:**
 - `automation.screenshot(filename)` - Capture current frame

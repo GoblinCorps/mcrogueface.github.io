@@ -248,7 +248,7 @@ A grid also supports the standard `on_click` (pixel position) alongside `on_cell
 
 ## Timers {#timers}
 
-[Timers](../objects/Timer) execute callbacks at specified intervals. The callback receives the timer object and the total elapsed runtime in milliseconds.
+[Timers](../objects/Timer) execute callbacks at specified intervals. The callback receives the timer object and the firing's scheduled time (`runtime`) in milliseconds. If a frame comes late, a repeating timer fires once for each interval it missed, each call with its own scheduled time, so the timer never drifts out of phase (see [Timer](../objects/Timer#late-frames-timers-catch-up)).
 
 ### Creating Timers
 
