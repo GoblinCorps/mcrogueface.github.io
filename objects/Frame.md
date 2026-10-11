@@ -6,7 +6,7 @@ mcrf:
   diataxis: reference
   disposition: current
   verified: "0.3.0-dev"
-  verified_commit: 73acab0
+  verified_commit: fc86b7e
 ---
 
 # Frame
@@ -60,7 +60,7 @@ mcrfpy.Frame(pos=None, size=None, **kwargs)
 - `outline_color` (Color): Border outline color. Default: (255, 255, 255, 255)
 - `outline` (float): Border thickness. Default: 0
 - `on_click` (callable): Click event handler
-- `children` (list): Initial child elements
+- `children` (list): Initial child elements; each is moved here from any parent it had
 - `visible` (bool): Visibility state. Default: True
 - `opacity` (float): Opacity (0.0-1.0). Default: 1.0
 - `z_index` (int): Rendering order. Default: 0
@@ -103,9 +103,34 @@ mcrfpy.Frame(pos=None, size=None, **kwargs)
 
 The read-only `bounds` property returns a `(pos, size)` pair of Vectors.
 
+## Children
+
+`frame.children` is a list-like `UICollection`: `append`, `extend`, `insert`, `remove`, `pop`, `clear`, `index`, `count`, `find`, indexing and slices. A drawable has exactly one parent and appears once, so adding it always **moves** it: out of its old parent, or to its new slot if it is already in this collection.
+
+```python
+panel = mcrfpy.Frame(pos=(0, 0), size=(200, 100))
+other = mcrfpy.Frame(pos=(220, 0), size=(200, 100))
+label = mcrfpy.Caption(text="HP", pos=(5, 5))
+
+panel.children.append(label)
+other.children.append(label)        # moves: label leaves panel
+assert label.parent is other and len(panel.children) == 0
+
+panel.children.clear()              # remove every child at once
+
+try:
+    label_box = mcrfpy.Frame()
+    other.children.append(label_box)
+    label_box.children.append(other)    # other would contain itself
+except ValueError:
+    pass                                # refused; nothing changed
+```
+
+Making a drawable its own ancestor raises `ValueError`, as does a value list that names one drawable twice (`extend([x, x])`, `children[0:1] = [x, x]`). `extend()` checks every item before adding any.
+
 ## Caching
 
-With `cache_subtree=True` a frame renders itself and all its children to a texture and re-blits it while nothing changes. Changes to children (text, colors, position, nested content) invalidate the cache, so cached frames stay current. Before 0.3.0 (#368), changes to child content could be frozen out of a cached frame.
+With `cache_subtree=True` a frame renders itself and all its children to a texture and re-blits it while nothing changes. Changes to children (text, colors, position, nested content) invalidate the cache, so cached frames stay current, including a Grid's layer edits and entities added or removed inside it. Before 0.3.0 (#368, #427, #446), such changes could be frozen out of a cached frame.
 
 ## Related
 

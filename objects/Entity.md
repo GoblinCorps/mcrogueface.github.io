@@ -6,7 +6,7 @@ mcrf:
   diataxis: reference
   disposition: current
   verified: "0.2.8-dev"
-  verified_commit: 3a85dd8
+  verified_commit: fc86b7e
 ---
 
 # Entity
@@ -102,7 +102,7 @@ mcrfpy.Entity(grid_pos=None, texture=None, sprite_index=0, **kwargs)
 | `visible` | bool | Visibility toggle |
 | `opacity` | float | Transparency (0.0-1.0) |
 | `name` | str | Element name for finding |
-| `grid` | Grid | Parent grid or None |
+| `grid` | Grid | Parent grid or None. An entity is on one grid at a time: assigning a grid, or adding the entity to another grid's `entities` by any method, moves it |
 | `labels` | frozenset[str] | String labels used for collision/targeting; assign any iterable of strings to replace them all |
 | `turn_order` | int | Turn order for `grid.step()`; 0 = skip, higher = later |
 | `move_speed` | float | Animation duration (seconds) used by behaviors when moving; 0 = instant |

@@ -4,7 +4,7 @@ mcrf:
   diataxis: howto
   disposition: current
   verified: "0.2.8-dev"
-  verified_commit: 3a85dd8
+  verified_commit: fc86b7e
 ---
 
 # Scene Management
@@ -129,7 +129,10 @@ for element in scene.children:
 # Remove
 scene.children.remove(frame)
 popped = scene.children.pop()
+scene.children.clear()      # remove everything
 ```
+
+A drawable has one parent: appending it to a scene or frame moves it out of wherever it was, and appending one that is already in the collection moves it to the end.
 
 ## Input Handling
 
@@ -339,8 +342,7 @@ class InventoryScene(mcrfpy.Scene):
 
     def refresh_display(self):
         # Clear old items
-        while len(self.children) > 0:
-            self.children.pop()
+        self.children.clear()
 
         # Display current inventory
         for i, item in enumerate(self.game.player.inventory):

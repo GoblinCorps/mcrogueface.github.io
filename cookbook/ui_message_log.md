@@ -4,7 +4,7 @@ mcrf:
   diataxis: howto
   disposition: current
   verified: "0.2.8-dev"
-  verified_commit: 3a85dd8
+  verified_commit: fc86b7e
 ---
 
 # Message Log Widget
@@ -81,9 +81,8 @@ class MessageLog:
 
     def _rebuild_display(self):
         """Rebuild all visible Caption elements."""
-        # Clear existing children (remove() takes a child object, not an index)
-        while len(self.frame.children) > 0:
-            self.frame.children.remove(self.frame.children[0])
+        # Clear existing children
+        self.frame.children.clear()
 
         # Calculate which messages to show
         start_idx = self.scroll_offset
@@ -222,8 +221,7 @@ class EnhancedMessageLog:
 
     def _rebuild_display(self):
         """Rebuild visible messages."""
-        while len(self.frame.children) > 0:
-            self.frame.children.remove(self.frame.children[0])
+        self.frame.children.clear()
 
         filtered = self._get_filtered_messages()
         start_idx = self.scroll_offset

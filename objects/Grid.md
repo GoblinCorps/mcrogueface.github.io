@@ -6,7 +6,7 @@ mcrf:
   diataxis: reference
   disposition: needs-review
   verified: "0.2.8-dev"
-  verified_commit: 336f00e
+  verified_commit: fc86b7e
 ---
 
 # Grid
@@ -37,7 +37,8 @@ tile_layer.set((5, 5), 42)  # Set tile sprite index
 
 # Add entities
 player = mcrfpy.Entity(grid_pos=(10, 10), texture=texture, sprite_index=84)
-grid.entities.append(player)
+grid.entities.append(player)   # an entity is on one grid: adding it elsewhere moves it
+# grid.entities.clear()        # detach every entity at once
 
 # Field of view
 grid.fov_radius = 8
@@ -83,7 +84,7 @@ mcrfpy.Grid(pos=None, size=None, grid_size=None, texture=None, **kwargs)
 | `grid_w`, `grid_h` | int | Grid dimensions, read-only |
 | `texture` | Texture | Sprite sheet for tile rendering (read-only) |
 | `fill_color` | Color | Background fill color |
-| `entities` | EntityCollection | Entities on this grid |
+| `entities` | EntityCollection | Entities on this grid. List-like (`append`, `extend`, `insert`, `remove`, `pop`, `clear`, indexing, slices); every add moves the entity from wherever it was, and naming one entity twice raises `ValueError` |
 | `layers` | tuple | All tile and color layers, sorted by z-index (read-only) |
 | `perspective` | Entity | Entity used for FOV perspective |
 | `perspective_enabled` | bool | Whether perspective rendering is active |
