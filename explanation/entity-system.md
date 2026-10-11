@@ -79,7 +79,15 @@ if grid.at(new_x, new_y).walkable:
 ```
 
 
-For animated movement, use the Animation system instead of direct position changes.
+For animated movement, use the Animation system instead of direct position changes: set the
+logical cell, then animate the drawn position, `draw_pos`, in tiles:
+
+```python
+entity.grid_pos = (new_x, new_y)
+entity.animate("draw_pos", (new_x, new_y), 0.2, mcrfpy.Easing.EASE_OUT_QUAD)
+```
+
+(An entity's `x`, `y` and `pos` are pixels, and animate in pixels.)
 
 ## Entity Lifecycle
 

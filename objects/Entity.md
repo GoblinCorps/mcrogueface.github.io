@@ -47,9 +47,9 @@ grid.entities.append(player)
 # Move to a new grid (tile) position -- instant, integer coordinates
 player.grid_pos = (11, 10)
 
-# Animated movement: 'x' is an alias for 'draw_x', the fractional tile
-# coordinate used for smooth motion between cells.
-player.animate("x", 12.0, 0.2, mcrfpy.Easing.EASE_OUT_QUAD)
+# Animated movement: draw_pos is the fractional tile position used for smooth
+# motion between cells. (player.x/.y/.pos are pixels, like every drawable.)
+player.animate("draw_pos", (12, 10), 0.2, mcrfpy.Easing.EASE_OUT_QUAD)
 
 # Pathfinding: find_path() returns an AStarPath (or None if unreachable);
 # it does not move the entity itself.
@@ -67,8 +67,9 @@ Note: `pos` and `grid_pos` are **not** the same kind of value. `grid_pos` (and
 its aliases `cell_pos`, `x`/`y` in grid-cell terms via `grid_x`/`grid_y`) is
 the integer logical tile coordinate. `pos` is the entity's **pixel** position
 relative to the grid (`draw_pos * tile_size`), and requires the entity to be
-attached to a grid. Setting `grid_pos` teleports the entity instantly, and
-`draw_pos` catches up immediately unless you are mid-animation.
+attached to a grid. Setting `grid_pos` changes the logical cell only: the sprite stays
+at `draw_pos` until you assign or animate `draw_pos` too (the `grid.step()` turn
+manager updates both; see #431).
 
 ## Constructor
 
@@ -113,7 +114,7 @@ mcrfpy.Entity(grid_pos=None, texture=None, sprite_index=0, **kwargs)
 
 | Method | Description |
 |--------|-------------|
-| `animate(property, target, duration, ...)` | Animate a property over time. Valid properties: `draw_x`/`draw_y` (aliased as `x`/`y`), `sprite_scale`, `sprite_index`, `sprite_offset_x`, `sprite_offset_y` |
+| `animate(property, target, duration, ...)` | Animate an attribute over time, in that attribute's units: `draw_pos` (tiles; the smooth-movement property), `x`, `y`, `pos` (pixels; need a grid), `opacity`, `sprite_index` (int, or a list of frames), `sprite_offset`, `sprite_offset_x`, `sprite_offset_y`. Before 0.3.0 `x`/`y` animated tiles; `draw_x`, `draw_y` and `sprite_scale` now raise `ValueError` |
 | `move(dx, dy)` | Move by a relative pixel offset |
 | `at(x, y)` | Return the `GridPoint` at (x, y) if currently visible to this entity's `perspective_map`, otherwise `None` |
 | `die()` | Remove this entity from its grid |

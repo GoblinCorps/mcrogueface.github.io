@@ -85,17 +85,17 @@ path = grid.find_path(player.cell_pos, target)
 
 def move_step(timer, runtime_ms):
     if path:
-        x, y = path.walk()
-        player.animate("draw_x", x, 0.15)
-        player.animate("draw_y", y, 0.15)
+        step = path.walk()
+        player.cell_pos = step
+        player.animate("draw_pos", step, 0.15)
     else:
         timer.stop()
 
 mcrfpy.Timer("move", move_step, 200)  # Move every 200ms
 ```
 
-`draw_x`/`draw_y` animate the entity's fractional `draw_pos` (smooth tile-to-tile motion),
-separate from the logical `cell_pos` used for collision and pathfinding.
+Animating `draw_pos` moves the sprite smoothly from tile to tile; it is separate from the
+logical `cell_pos` used for collision and pathfinding, so the step sets both.
 
 ### Path Validation
 

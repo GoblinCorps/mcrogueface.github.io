@@ -5,8 +5,8 @@ mcrf:
   objects: [Animation]
   diataxis: reference
   disposition: current
-  verified: "0.2.8-dev"
-  verified_commit: 3a85dd8
+  verified: "0.3.0-dev"
+  verified_commit: 7fff142
 ---
 
 # Animation
@@ -15,7 +15,7 @@ Property interpolation over time, created with the `animate()` method.
 
 ## Overview
 
-There is **no constructible `mcrfpy.Animation` class**. Animations are created by calling `animate()` on the object you want to animate: every drawable (`Frame`, `Caption`, `Sprite`, `Grid`, `Line`, `Circle`, `Arc`) and `Entity` exposes it. The call creates the animation, starts it, and registers it with the engine's animation manager in one step, then returns an `Animation` handle you can use to monitor or cancel it.
+There is **no constructible `mcrfpy.Animation` class**. Animations are created by calling `animate()` on the object you want to animate: every drawable (`Frame`, `Caption`, `Sprite`, `Grid`, `Line`, `Circle`, `Arc`, `Viewport3D`) and `Entity` exposes it. The call creates the animation, starts it, and registers it with the engine's animation manager in one step, then returns an `Animation` handle you can use to monitor or cancel it.
 
 The handle's type displays as `mcrfpy.Animation`, but the class is not exported from the module — the only way to obtain one is as the return value of `animate()`.
 
@@ -65,9 +65,9 @@ obj.animate(property, target, duration, easing=None, delta=False,
 
 **Raises:**
 
-- `ValueError` — the property name is not animatable on this object type, the easing string is unknown, or `conflict_mode` is not one of the three accepted values.
-- `RuntimeError` — `conflict_mode='error'` and the property is already being animated.
-- `TypeError` — `callback` is not callable.
+- `ValueError` — the name is not an animatable attribute of this object, the easing string is unknown, `conflict_mode` is not one of the three accepted values, or a Color target is out of range.
+- `TypeError` — the target is not of the property's type, or `callback` is not callable.
+- `RuntimeError` — `conflict_mode='error'` and the property is already being animated, or an Entity's `x`/`y`/`pos` is animated while the entity is not on a grid.
 
 `Entity.animate()` takes the same arguments; only its set of valid property names differs (see below).
 
@@ -93,7 +93,7 @@ def on_arrival(target, prop, value):
 frame.animate("x", 500.0, 2.0, mcrfpy.Easing.EASE_OUT_CUBIC, callback=on_arrival)
 ```
 
-The callback fires when the animation finishes naturally or when `complete()` is called on the handle. It does **not** fire when the animation is cancelled with `stop()`, and looping animations never fire it (they never complete).
+The callback fires when the animation finishes naturally, or on the next frame after `complete()` is called on the handle. It does **not** fire when the animation is cancelled with `stop()`, and looping animations never fire it (they never complete).
 
 ### Conflict Handling
 
@@ -155,7 +155,7 @@ Notes:
 
 | Method | Description |
 |--------|-------------|
-| `complete()` | Jump to the final value immediately; fires the callback if one was set |
+| `complete()` | Jump to the final value immediately; the callback, if any, fires on the next frame |
 | `stop()` | Cancel without applying the final value; the callback is NOT fired |
 | `get_current_value()` | Current interpolated value (type matches the property) |
 | `hasValidTarget()` | True if the animated object still exists; animations self-clean when their target is destroyed |
@@ -179,97 +179,137 @@ print(anim.elapsed)       # seconds since start
 print(anim.is_complete)   # False until finished (or complete() called)
 print(anim.get_current_value())  # current interpolated value
 
-anim.complete()   # jump to x=500 immediately; fires the callback if set
+anim.complete()   # jump to x=500 immediately; a callback would fire on the next frame
 print(frame.x)    # 500.0
 ```
 
 ## Animatable Properties
 
-`animate()` raises `ValueError` for property names the object doesn't support. The lists below were verified against the engine (each name accepted or rejected at runtime).
+**The rule (0.3.0):** every name `animate()` accepts is a readable attribute of the object, animated in that attribute's units and type, so animating ends exactly where assigning the same value would. `frame.animate("w", 300.0, 0.5)` finishes with `frame.w == 300.0`, just as `frame.w = 300.0` does. A name that isn't an animatable attribute raises `ValueError`; for names that `animate()` used to accept, the message names the replacement ([see below](#names-removed-in-030)).
+
+### Every drawable
+
+All drawables (Frame, Caption, Sprite, Grid, Line, Circle, Arc, Viewport3D) share these:
+
+| Property | Value type | Description |
+|----------|------------|-------------|
+| `x`, `y` | float | Position in pixels |
+| `pos` | Vector | Position in pixels |
+| `rotation` | float | Rotation in degrees (not Viewport3D) |
+| `origin` | Vector | Transform origin / rotation pivot (not Viewport3D) |
+| `opacity` | float | 0.0 (transparent) to 1.0 (opaque) |
+| `z_index` | int | Render order |
+
+For Circle and Arc, the position is the **center**. For Line it is the **midpoint**: assigning or animating a Line's `pos`, `x` or `y` moves both endpoints.
 
 ### Frame
 
 | Property | Value type | Description |
 |----------|------------|-------------|
-| `x`, `y`, `w`, `h` | float | Position and size |
-| `pos`, `position` | (x, y) | Position as a pair |
-| `size` | (w, h) | Size as a pair |
-| `fill_color`, `outline_color` | (r, g, b[, a]) | Colors (all channels interpolate) |
+| `w`, `h` | float | Size |
+| `size` | Vector | Size as a pair |
+| `fill_color`, `outline_color` | Color | Colors (all channels interpolate) |
 | `fill_color.r/.g/.b/.a`, `outline_color.r/.g/.b/.a` | float | Individual color channels |
 | `outline` | float | Outline thickness |
-| `opacity` | float | 0.0 (transparent) to 1.0 (opaque) |
-| `rotation` | float | Rotation in degrees |
-| `origin`, `origin_x`, `origin_y` | (x, y) / float | Transform origin (rotation pivot) |
+
+Resizing a frame that clips or caches its children (`clip_children`, `cache_subtree`) resizes its texture too, whether you assign or animate the size.
 
 ### Caption
 
-Same as Frame, minus `w`/`h`/`size`-as-a-pair, plus:
-
 | Property | Value type | Description |
 |----------|------------|-------------|
-| `text` | str | Typewriter-style text transition (see [Typewriter Text](#typewriter-text)) |
 | `font_size` | float | Font size in points |
-| `size` | float | Alias for `font_size` (a float here, unlike Frame's `size`) |
+| `outline` | float | Text outline thickness |
+| `fill_color`, `outline_color` | Color | Text colors, plus their `.r/.g/.b/.a` channels |
+| `text` | str | Typewriter-style text transition (see [Typewriter Text](#typewriter-text)) |
+
+A Caption's `w`, `h` and `size` are its read-only text bounds, so they are not animatable. Animate `font_size` to scale text.
 
 ### Sprite
 
 | Property | Value type | Description |
 |----------|------------|-------------|
-| `x`, `y`, `pos`, `position` | float / (x, y) | Position |
 | `sprite_index` | int or list[int] | Texture frame; a list plays a frame sequence |
 | `scale` | float | Uniform scale factor |
 | `scale_x`, `scale_y` | float | Per-axis scale |
-| `opacity` | float | 0.0 to 1.0 |
-| `rotation` | float | Rotation in degrees |
-| `origin`, `origin_x`, `origin_y` | (x, y) / float | Transform origin |
-| `z_index` | float | Render order |
 
 ### Grid
 
-Only the **camera** properties of a Grid are animatable:
-
 | Property | Value type | Description |
 |----------|------------|-------------|
-| `center` | (x, y) | Camera center in **pixels** |
+| `w`, `h` | float | Viewport size |
+| `size` | Vector | Viewport size as a pair |
+| `fill_color` | Color | Background color |
+| `center` | Vector | Camera center in **pixels** |
 | `center_x`, `center_y` | float | Camera center components (pixels) |
 | `zoom` | float | Camera zoom level |
 | `camera_rotation` | float | Camera rotation in degrees |
 
-A Grid's geometry (`x`, `y`, `w`, `h`, `pos`, `size`) and `fill_color` are not animatable — set them directly, or animate a parent Frame instead.
-
 ### Line, Circle, Arc
 
-All three also accept `x`, `y`, `opacity`, `rotation`, `origin_x`, and `origin_y`. Whole-color animation is supported, but per-channel sub-properties (e.g. `color.r`) are not.
+Each also has the shared properties above (`x`, `y`, `pos`, `rotation`, `origin`, `opacity`, `z_index`). Whole colors animate; per-channel sub-properties (e.g. `color.r`) are not available on these types.
 
 | Type | Properties |
 |------|------------|
-| `Line` | `start`, `end`, `start_x`, `start_y`, `end_x`, `end_y`, `thickness`, `color`, `origin` |
-| `Circle` | `center`, `position`, `radius`, `outline`, `fill_color`, `outline_color`, `origin` |
-| `Arc` | `center`, `radius`, `start_angle`, `end_angle`, `thickness`, `color` |
+| `Line` | `start`, `end` (Vector), `thickness`, `color` |
+| `Circle` | `center` (Vector), `radius`, `outline`, `fill_color`, `outline_color` |
+| `Arc` | `center` (Vector), `radius`, `start_angle`, `end_angle`, `thickness`, `color` |
+
+### Viewport3D
+
+`w`, `h` (float), `size` (Vector), `fov`, `fog_near`, `fog_far` (float), `bg_color`, `fog_color` (Color), plus the shared `x`, `y`, `pos`, `opacity` and `z_index`.
 
 ### Entity
 
-Entities animate their **draw position** in tile coordinates; the logical cell (`cell_pos`) is unchanged by animation.
-
 | Property | Value type | Description |
 |----------|------------|-------------|
-| `draw_x`, `draw_y` | float | Drawn position in tile coordinates (`x`/`y` accepted as aliases) |
+| `draw_pos` | Vector | Drawn position in **tile** coordinates: the smooth-movement property |
+| `x`, `y` | float | Position in **pixels** (`draw_pos` times the grid's cell size) |
+| `pos` | Vector | Position in **pixels** |
+| `opacity` | float | 0.0 to 1.0 |
 | `sprite_index` | int or list[int] | Texture frame or frame sequence |
-| `sprite_scale` | float | Sprite scale factor |
-| `sprite_offset_x`, `sprite_offset_y` | float | Pixel offset of the sprite within its cell |
+| `sprite_offset` | Vector | Pixel offset of the sprite within its cell (also `sprite_offset_x`, `sprite_offset_y`) |
 
-Uniforms exposed by a shader attached to a Sprite, Grid, or Entity are also accepted as animatable property names.
+`x`, `y` and `pos` exist only while the entity is on a grid, so animating them on an entity with no grid raises `RuntimeError` at `animate()` time; `draw_pos` works either way. Animation moves only the drawn position: the logical cell (`grid_pos` / `cell_pos`) is unchanged.
+
+Shader uniforms (`"shader.<name>"`) on a drawable or entity with a shader are also animatable floats.
+
+### Not animatable
+
+These attributes are writable but deliberately not animatable:
+- **Entity logical state:** `grid_pos`, `grid_x`, `grid_y` and the `cell_*` aliases, `tile_size`/`tile_width`/`tile_height`, `turn_order`, `sight_radius`, `default_behavior` and `move_speed`.
+- **Layout margins:** `margin`, `horiz_margin`, `vert_margin`.
+- **Viewport3D:** `cell_size`.
+
+`Entity3D` still uses its own animate names (`world_x`, `rot_y`, ...); see issue #449.
+
+### Names removed in 0.3.0
+
+Each of these raises `ValueError` naming its replacement:
+
+| Old name | Use instead |
+|----------|-------------|
+| Entity `draw_x`, `draw_y` | `draw_pos` (tiles), or `x`/`y` (pixels) |
+| Entity `x`, `y` *in tile units* | `draw_pos`. `x`/`y` still exist, but they are now pixels, as when you read them |
+| Entity `sprite_scale` | none: it never had an effect, because the grid's zoom sets the sprite scale |
+| `position` | `pos` |
+| `origin_x`, `origin_y` | `origin` |
+| Line `start_x`, `start_y`, `end_x`, `end_y` | `start`, `end` |
+| Caption `size` | `font_size` |
 
 ## Target Value Types
 
-| Target type | Used for |
-|-------------|----------|
-| float | Numeric properties (`x`, `w`, `opacity`, `zoom`, `radius`, ...) |
-| int | `sprite_index` |
-| (r, g, b) or (r, g, b, a) | Color properties |
-| (x, y) | Vector properties (`pos`, `size`, `center`, `start`, `end`) |
-| list[int] | Sprite frame sequences (combine with `loop=True`) |
-| str | `text` on Caption |
+A target is converted the way assigning that attribute converts it:
+
+| Property type | Accepted targets |
+|---------------|------------------|
+| float | an int or a float |
+| int | an int; or a list of ints to step through (sprite frames; combine with `loop=True`) |
+| Vector | a `Vector`, an `(x, y)` tuple, or a list |
+| Color | a `Color`, or an `(r, g, b)` / `(r, g, b, a)` tuple, checked as strictly as `Color()`: components must be ints in 0-255 |
+| str | a `str` (Caption `text`) |
+
+A target of the wrong type raises `TypeError` naming the property. The completion callback's `value` is a float or int, an `(x, y)` tuple for a Vector, or an `(r, g, b, a)` tuple for a Color.
 
 ## Easing
 
@@ -364,10 +404,10 @@ grid.entities.append(player)
 
 # Slide the drawn position across the grid in tile coordinates.
 # cell_pos (the logical cell) is NOT changed by this animation.
-player.animate("draw_x", 5.0, 0.5, mcrfpy.Easing.EASE_OUT_QUAD)
+player.animate("draw_pos", (5, 1), 0.5, mcrfpy.Easing.EASE_OUT_QUAD)
 ```
 
-Note: entities moved by the turn manager (`grid.step()` with behaviors) animate their draw position automatically over `entity.move_speed` seconds; manual `draw_x`/`draw_y` animation is for movement outside the turn system.
+Note: entities moved by the turn manager (`grid.step()` with behaviors) animate their draw position automatically over `entity.move_speed` seconds; animating `draw_pos` yourself is for movement outside the turn system.
 
 ### Colors and Delta Mode
 

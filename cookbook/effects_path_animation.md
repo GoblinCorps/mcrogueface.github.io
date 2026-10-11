@@ -3,13 +3,17 @@ mcrf:
   objects: [Entity, Grid, Timer, Animation, Behavior, AStarPath]
   diataxis: howto
   disposition: current
-  verified: "0.2.8-dev"
-  verified_commit: 3a85dd8
+  verified: "0.3.0-dev"
+  verified_commit: 7fff142
 ---
 
 # Path Animation (Multi-Step Movement)
 
 Animate an entity along a path with chained animations, useful for smooth multi-tile movement, patrol routes, or cinematic sequences.
+
+Every example animates the entity's **`draw_pos`**: its drawn position in fractional tile
+coordinates, a Vector. (An entity's `x`, `y` and `pos` are pixels. Before 0.3.0 the tile
+properties were `draw_x`/`draw_y`; those names now raise `ValueError`.)
 
 ## Quick Example
 
@@ -50,24 +54,24 @@ class PathAnimator:
 
         target_x, target_y = self.path[self.index]
 
-        # Create animations for this step
+        # Called after each leg; a diagonal waypoint takes two legs (X, then Y)
         def on_step_complete(target, prop, value):
-            # Callback for step completion
-            if self.on_step:
-                self.on_step(self, self.index)
-            self.index += 1
+            pos = self.entity.draw_pos
+            if (pos.x, pos.y) == (target_x, target_y):
+                # Arrived at this waypoint
+                if self.on_step:
+                    self.on_step(self, self.index)
+                self.index += 1
             self._animate_next()
 
-        # Animate X (draw_x/draw_y are the tile-coordinate properties used
-        # for smooth movement between grid cells; compare against draw_pos,
-        # not entity.x/entity.y, which are pixel coordinates)
+        # Move along X, then along Y: one leg per animation. draw_pos is in
+        # tiles (entity.x/entity.y are pixel coordinates).
         pos = self.entity.draw_pos
         if pos.x != target_x:
-            self.entity.animate("draw_x", float(target_x), self.step_duration,
+            self.entity.animate("draw_pos", (target_x, pos.y), self.step_duration,
                                  self.easing, callback=on_step_complete)
-        # Animate Y
         elif pos.y != target_y:
-            self.entity.animate("draw_y", float(target_y), self.step_duration,
+            self.entity.animate("draw_pos", (pos.x, target_y), self.step_duration,
                                  self.easing, callback=on_step_complete)
         else:
             # Already at position, skip to next
@@ -84,7 +88,7 @@ animator.start()
 
 ## Diagonal Movement Support
 
-Animate both X and Y simultaneously for diagonal paths:
+Animate `draw_pos` straight to each waypoint, and both axes move together:
 
 ```python
 import mcrfpy
@@ -100,7 +104,6 @@ class DiagonalPathAnimator:
         self.index = 0
         self.on_complete = None
         self.on_step = None
-        self._pending_anims = 0
 
     def start(self):
         """Begin path animation."""
@@ -108,13 +111,11 @@ class DiagonalPathAnimator:
         self._animate_next()
 
     def _on_anim_done(self, target, prop, value):
-        """Track when both X and Y animations complete."""
-        self._pending_anims -= 1
-        if self._pending_anims <= 0:
-            if self.on_step:
-                self.on_step(self, self.index)
-            self.index += 1
-            self._animate_next()
+        """One animation per waypoint, so one callback per step."""
+        if self.on_step:
+            self.on_step(self, self.index)
+        self.index += 1
+        self._animate_next()
 
     def _animate_next(self):
         """Animate to next waypoint (diagonal if needed)."""
@@ -125,26 +126,16 @@ class DiagonalPathAnimator:
 
         target_x, target_y = self.path[self.index]
         pos = self.entity.draw_pos
-        current_x, current_y = pos.x, pos.y
 
-        self._pending_anims = 0
-
-        # Animate X if different (draw_x/draw_y = tile-coordinate properties)
-        if current_x != target_x:
-            self._pending_anims += 1
-            self.entity.animate("draw_x", float(target_x), self.step_duration,
-                                 self.easing, callback=self._on_anim_done)
-
-        # Animate Y if different
-        if current_y != target_y:
-            self._pending_anims += 1
-            self.entity.animate("draw_y", float(target_y), self.step_duration,
-                                 self.easing, callback=self._on_anim_done)
-
-        # If already at target, move to next
-        if self._pending_anims == 0:
+        if (pos.x, pos.y) == (target_x, target_y):
+            # Already at target, move to next
             self.index += 1
             self._animate_next()
+            return
+
+        # One animation moves both axes (draw_pos is in tiles)
+        self.entity.animate("draw_pos", (target_x, target_y), self.step_duration,
+                             self.easing, callback=self._on_anim_done)
 
 
 # Usage - diagonal path
@@ -207,13 +198,10 @@ class PatrolAnimator:
             mcrfpy.Timer(f"patrol_pause_{id(self)}", resume,
                         int(self.pause_duration * 1000), once=True)
 
-        # Animate movement (draw_x/draw_y = tile-coordinate properties)
+        # Animate movement (draw_pos is in tiles)
         pos = self.entity.draw_pos
-        if pos.x != target_x:
-            self.entity.animate("draw_x", float(target_x), self.step_duration,
-                                 mcrfpy.Easing.EASE_IN_OUT, callback=on_arrive)
-        elif pos.y != target_y:
-            self.entity.animate("draw_y", float(target_y), self.step_duration,
+        if (pos.x, pos.y) != (target_x, target_y):
+            self.entity.animate("draw_pos", (target_x, target_y), self.step_duration,
                                  mcrfpy.Easing.EASE_IN_OUT, callback=on_arrive)
         else:
             # Already there, move to next after pause
@@ -275,19 +263,10 @@ class VariableSpeedPath:
             self.index += 1
             self._next()
 
-        # Animate (using the Y callback since we animate both; draw_x/draw_y
-        # are the tile-coordinate properties)
+        # Animate draw_pos (tiles); one animation covers both axes
         pos = self.entity.draw_pos
-        need_x = pos.x != x
-        need_y = pos.y != y
-
-        if need_x and need_y:
-            self.entity.animate("draw_x", float(x), duration, easing)
-            self.entity.animate("draw_y", float(y), duration, easing, callback=done)
-        elif need_x:
-            self.entity.animate("draw_x", float(x), duration, easing, callback=done)
-        elif need_y:
-            self.entity.animate("draw_y", float(y), duration, easing, callback=done)
+        if (pos.x, pos.y) != (x, y):
+            self.entity.animate("draw_pos", (x, y), duration, easing, callback=done)
         else:
             done(None, None, None)
 
@@ -380,23 +359,17 @@ class CameraFollowingPath:
             self.index += 1
             self._next()
 
-        # Animate entity (draw_x/draw_y = tile-coordinate properties)
+        # Animate entity (draw_pos is in tiles)
         pos = self.entity.draw_pos
-        if pos.x != x:
-            self.entity.animate("draw_x", float(x), self.step_duration,
-                                 mcrfpy.Easing.EASE_IN_OUT, callback=done)
-        elif pos.y != y:
-            self.entity.animate("draw_y", float(y), self.step_duration,
+        if (pos.x, pos.y) != (x, y):
+            self.entity.animate("draw_pos", (x, y), self.step_duration,
                                  mcrfpy.Easing.EASE_IN_OUT, callback=done)
         else:
             done(None, None, None)
             return
 
-        # Animate camera to follow (center_x/center_y are in pixel space;
-        # tile size here is 16px)
-        self.grid.animate("center_x", (x + 0.5) * 16,
-                           self.step_duration, mcrfpy.Easing.EASE_IN_OUT)
-        self.grid.animate("center_y", (y + 0.5) * 16,
+        # Animate camera to follow (center is in pixel space; tile size here is 16px)
+        self.grid.animate("center", ((x + 0.5) * 16, (y + 0.5) * 16),
                            self.step_duration, mcrfpy.Easing.EASE_IN_OUT)
 
 
@@ -412,7 +385,7 @@ mover.start()
 1. **Animation callbacks**: Chain animations using the `callback` parameter
 2. **Index tracking**: Keep track of current position in path
 3. **Completion handling**: Fire callbacks when path is complete
-4. **Diagonal support**: Animate both X and Y simultaneously with completion tracking
+4. **Diagonal support**: `draw_pos` is a Vector, so one animation moves both axes
 5. **Pathfinding integration**: Use `entity.find_path(target)` (or `grid.find_path(start, end)`) for dynamic routes
 
 ## Tips

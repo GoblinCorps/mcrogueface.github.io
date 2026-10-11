@@ -128,9 +128,10 @@ def try_move_animated(dx: int, dy: int) -> bool:
         player_x = new_x
         player_y = new_y
 
-        # Animate position change over 0.1 seconds
-        player_entity.animate("x", float(new_x), 0.1)
-        player_entity.animate("y", float(new_y), 0.1)
+        # Move the logical cell now, and slide the sprite there over 0.1 seconds.
+        # draw_pos is in tiles; the entity's x/y/pos are pixels.
+        player_entity.grid_pos = (new_x, new_y)
+        player_entity.animate("draw_pos", (new_x, new_y), 0.1)
         return True
     return False
 ```

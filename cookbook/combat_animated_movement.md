@@ -2,9 +2,9 @@
 mcrf:
   objects: [Entity, Grid, Timer, Easing, Scene]
   diataxis: howto
-  disposition: needs-review
-  verified: "0.2.8-dev"
-  verified_commit: 3a85dd8
+  disposition: current
+  verified: "0.3.0-dev"
+  verified_commit: 7fff142
 ---
 
 # Animated Movement
@@ -18,9 +18,18 @@ McRogueFace has no `mcrfpy.Animation` class to construct directly. Instead every
 method that creates and starts the animation in one call. This recipe covers using
 `.animate()` for fluid movement instead of instant teleportation.
 
-For `Entity`, `.animate("x", ...)` / `.animate("y", ...)` are aliases for `draw_x`/`draw_y`
-(fractional tile coordinates), so targets are tile positions, not pixels — pass
-`float(new_x)`/`float(new_y)` where `new_x`/`new_y` are grid cells.
+Animate an entity's **`draw_pos`**: its drawn position in fractional tile
+coordinates, a Vector. One call moves both axes, so a target is just the destination
+cell, `(new_x, new_y)`. The entity's `x`, `y` and `pos` are **pixels**, like every
+drawable's, and animate in pixels too.
+
+The drawn position and the logical cell (`grid_pos`) are separate: animating `draw_pos`
+moves the sprite, and assigning `grid_pos` moves the entity for collision and
+pathfinding. A move sets both.
+
+> **0.3.0:** before 0.3.0, `animate("x", ...)` on an entity took **tile** units, and
+> `"draw_x"`/`"draw_y"` were accepted. Now `"x"`/`"y"` are pixels, and `"draw_x"`/`"draw_y"`
+> raise `ValueError` pointing at `"draw_pos"`.
 
 ## Basic Animated Move
 
@@ -29,8 +38,8 @@ import mcrfpy
 
 def move_with_animation(entity, new_x, new_y, duration=0.2):
     """Move entity smoothly to new position."""
-    entity.animate("x", float(new_x), duration, mcrfpy.Easing.EASE_IN_OUT)
-    entity.animate("y", float(new_y), duration, mcrfpy.Easing.EASE_IN_OUT)
+    entity.grid_pos = (new_x, new_y)   # logical cell, immediately
+    entity.animate("draw_pos", (new_x, new_y), duration, mcrfpy.Easing.EASE_IN_OUT)
 ```
 
 ## Animation with Callback
@@ -55,9 +64,9 @@ def move_with_callback(entity, new_x, new_y, duration=0.2, on_complete=None):
         if on_complete:
             on_complete()
 
-    # Only need callback on one animation
-    entity.animate("x", float(new_x), duration, mcrfpy.Easing.EASE_IN_OUT, callback=animation_done)
-    entity.animate("y", float(new_y), duration, mcrfpy.Easing.EASE_IN_OUT)
+    entity.grid_pos = (new_x, new_y)
+    entity.animate("draw_pos", (new_x, new_y), duration, mcrfpy.Easing.EASE_IN_OUT,
+                   callback=animation_done)
 
 
 # Usage in turn-based game
@@ -87,25 +96,25 @@ def player_move(direction):
 # EASE_IN_OUT  - Slow start and end (smooth)
 # (also: *_QUAD, *_CUBIC, *_SINE, *_ELASTIC, *_BOUNCE, *_BACK, *_EXPO variants)
 
-# Examples of each
-def demo_easings(entity, target_x):
+# Examples of each (target is a cell, in tiles)
+def demo_easings(entity, target):
     # Linear - mechanical, robotic movement
-    entity.animate("x", target_x, 0.5, mcrfpy.Easing.LINEAR)
+    entity.animate("draw_pos", target, 0.5, mcrfpy.Easing.LINEAR)
 
     # EaseIn - accelerating (good for falling)
-    entity.animate("x", target_x, 0.5, mcrfpy.Easing.EASE_IN)
+    entity.animate("draw_pos", target, 0.5, mcrfpy.Easing.EASE_IN)
 
     # EaseOut - decelerating (good for stopping)
-    entity.animate("x", target_x, 0.5, mcrfpy.Easing.EASE_OUT)
+    entity.animate("draw_pos", target, 0.5, mcrfpy.Easing.EASE_OUT)
 
     # EaseInOut - natural movement (best for walking)
-    entity.animate("x", target_x, 0.5, mcrfpy.Easing.EASE_IN_OUT)
+    entity.animate("draw_pos", target, 0.5, mcrfpy.Easing.EASE_IN_OUT)
 ```
 
 ## Camera Follow Animation
 
-Animate the grid camera to follow the player. `Grid` also has `.animate()`, and
-`center_x`/`center_y` are pixel-space camera coordinates:
+Animate the grid camera to follow the player. `Grid` also has `.animate()`, and its
+`center` (a Vector; also `center_x`/`center_y`) is in pixel-space camera coordinates:
 
 ```python
 def animate_camera_follow(grid, target_x, target_y, duration=0.2):
@@ -114,8 +123,7 @@ def animate_camera_follow(grid, target_x, target_y, duration=0.2):
     center_x = (target_x + 0.5) * 16
     center_y = (target_y + 0.5) * 16
 
-    grid.animate("center_x", center_x, duration, mcrfpy.Easing.LINEAR)
-    grid.animate("center_y", center_y, duration, mcrfpy.Easing.LINEAR)
+    grid.animate("center", (center_x, center_y), duration, mcrfpy.Easing.LINEAR)
 
 
 def move_player_with_camera(player, grid, new_x, new_y, duration=0.2):
@@ -126,8 +134,9 @@ def move_player_with_camera(player, grid, new_x, new_y, duration=0.2):
         grid.center = ((new_x + 0.5) * 16, (new_y + 0.5) * 16)
 
     # Animate player
-    player.animate("x", float(new_x), duration, mcrfpy.Easing.EASE_IN_OUT, callback=on_complete)
-    player.animate("y", float(new_y), duration, mcrfpy.Easing.EASE_IN_OUT)
+    player.grid_pos = (new_x, new_y)
+    player.animate("draw_pos", (new_x, new_y), duration, mcrfpy.Easing.EASE_IN_OUT,
+                   callback=on_complete)
 
     # Animate camera
     animate_camera_follow(grid, new_x, new_y, duration)
@@ -170,12 +179,12 @@ class PathAnimator:
 
         target_x, target_y = self.path[self.current_step]
 
-        # Update the logical cell immediately; draw_x/draw_y animate separately
+        # Update the logical cell immediately; draw_pos animates separately
         self.entity.grid_pos = (target_x, target_y)
 
         # Create step animation
-        self.entity.animate("x", float(target_x), self.step_duration, mcrfpy.Easing.EASE_IN_OUT)
-        self.entity.animate("y", float(target_y), self.step_duration, mcrfpy.Easing.EASE_IN_OUT)
+        self.entity.animate("draw_pos", (target_x, target_y), self.step_duration,
+                            mcrfpy.Easing.EASE_IN_OUT)
 
         # Schedule next step
         self.current_step += 1
@@ -267,15 +276,14 @@ class MovementController:
             self.entity.grid_pos = (new_x, new_y)
             self._process_queue()
 
-        self.entity.animate("x", float(new_x), self.move_duration, mcrfpy.Easing.EASE_IN_OUT, callback=on_complete)
-        self.entity.animate("y", float(new_y), self.move_duration, mcrfpy.Easing.EASE_IN_OUT)
+        self.entity.animate("draw_pos", (new_x, new_y), self.move_duration,
+                            mcrfpy.Easing.EASE_IN_OUT, callback=on_complete)
 
         # Also animate camera
         center_x = (new_x + 0.5) * 16
         center_y = (new_y + 0.5) * 16
 
-        self.grid.animate("center_x", center_x, self.move_duration, mcrfpy.Easing.LINEAR)
-        self.grid.animate("center_y", center_y, self.move_duration, mcrfpy.Easing.LINEAR)
+        self.grid.animate("center", (center_x, center_y), self.move_duration, mcrfpy.Easing.LINEAR)
 
 
 # Usage (assumes scene, player, game_grid already defined)
@@ -307,8 +315,8 @@ def move_or_bump(entity, new_x, new_y, grid, duration=0.2):
 
     if grid.at(new_x, new_y).walkable:
         # Normal move
-        entity.animate("x", float(new_x), duration, mcrfpy.Easing.EASE_IN_OUT)
-        entity.animate("y", float(new_y), duration, mcrfpy.Easing.EASE_IN_OUT)
+        entity.grid_pos = (new_x, new_y)
+        entity.animate("draw_pos", (new_x, new_y), duration, mcrfpy.Easing.EASE_IN_OUT)
     else:
         # Bump animation - move partway then back
         current_x = entity.draw_pos.x
@@ -320,12 +328,12 @@ def move_or_bump(entity, new_x, new_y, grid, duration=0.2):
 
         def bump_back(target, prop, value):
             # Return to original position
-            target.animate("x", float(current_x), duration * 0.5, mcrfpy.Easing.EASE_OUT)
-            target.animate("y", float(current_y), duration * 0.5, mcrfpy.Easing.EASE_OUT)
+            target.animate("draw_pos", (current_x, current_y), duration * 0.5,
+                           mcrfpy.Easing.EASE_OUT)
 
         # Bump forward
-        entity.animate("x", bump_x, duration * 0.5, mcrfpy.Easing.EASE_OUT, callback=bump_back)
-        entity.animate("y", bump_y, duration * 0.5, mcrfpy.Easing.EASE_OUT)
+        entity.animate("draw_pos", (bump_x, bump_y), duration * 0.5, mcrfpy.Easing.EASE_OUT,
+                       callback=bump_back)
 ```
 
 ## Attack Lunge
@@ -344,37 +352,32 @@ def attack_lunge(attacker, target, duration=0.15):
 
     def return_to_start(anim_target, prop, value):
         # Return to starting position
-        anim_target.animate("x", float(start_x), duration, mcrfpy.Easing.EASE_OUT)
-        anim_target.animate("y", float(start_y), duration, mcrfpy.Easing.EASE_OUT)
+        anim_target.animate("draw_pos", (start_x, start_y), duration, mcrfpy.Easing.EASE_OUT)
 
     # Lunge forward
-    attacker.animate("x", lunge_x, duration, mcrfpy.Easing.EASE_IN, callback=return_to_start)
-    attacker.animate("y", lunge_y, duration, mcrfpy.Easing.EASE_IN)
+    attacker.animate("draw_pos", (lunge_x, lunge_y), duration, mcrfpy.Easing.EASE_IN,
+                     callback=return_to_start)
 ```
 
 ## Tips
 
 1. **Duration Tuning**: 0.15-0.25 seconds feels responsive. Slower for larger movements.
 
-2. **Single Axis Movement**: For 4-directional movement, only animate the changing axis:
-   ```python
-   if new_x != current_x:
-       anim = entity.animate("x", float(new_x), duration, mcrfpy.Easing.EASE_IN_OUT, callback=done)
-   else:
-       anim = entity.animate("y", float(new_y), duration, mcrfpy.Easing.EASE_IN_OUT, callback=done)
-   ```
+2. **One Animation per Move**: `draw_pos` animates both axes together, so one call (and
+   one callback) covers a move in any direction, diagonals included.
 
 3. **Input Blocking**: Always check `is_animating` before accepting new input in turn-based games.
 
-4. **Callback on One Animation**: When animating x and y together, only put the callback on one.
+4. **Camera Smoothness**: Use `mcrfpy.Easing.LINEAR` for camera, `EASE_IN_OUT` for entities - prevents jarring camera.
 
-5. **Camera Smoothness**: Use `mcrfpy.Easing.LINEAR` for camera, `EASE_IN_OUT` for entities - prevents jarring camera.
-
-6. **Animation References**: `.animate()` returns an `Animation` object; keep a reference if you need to inspect or cancel it:
+5. **Animation References**: `.animate()` returns an `Animation` object; keep a reference if you need to inspect or cancel it:
    ```python
-   current_anim = entity.animate("x", 5.0, 0.5, mcrfpy.Easing.LINEAR)
-   # Later: current_anim = None  # Let it complete or create new one
+   current_anim = entity.animate("draw_pos", (5, 3), 0.5, mcrfpy.Easing.LINEAR)
+   current_anim.is_complete   # False while running
+   current_anim.stop()        # cancel where it is (no final value, no callback)
    ```
+   Starting a new animation of the same property replaces the running one by default
+   (`conflict_mode='replace'`; `'queue'` waits for it, `'error'` raises).
 
 ## See Also
 

@@ -462,11 +462,9 @@ def on_enemy_killed(enemy):
 4. **Death Animation**: Consider delaying entity removal for a death animation:
    ```python
    def die_with_animation(entity):
-       # Entity.animate() only accepts draw_x/draw_y, sprite_scale, sprite_index,
-       # and sprite_offset_x/y -- there's no entity opacity to fade, so shrink instead.
-       entity.animate("sprite_scale", 0.0, 0.5, mcrfpy.Easing.LINEAR)
-       # Remove after animation
-       mcrfpy.Timer("remove", lambda timer, runtime: remove_entity(entity), 500)
+       # Fade the sprite out, then detach the entity from its grid
+       entity.animate("opacity", 0.0, 0.5, mcrfpy.Easing.LINEAR,
+                      callback=lambda target, prop, value: target.die())
    ```
 
 5. **Armor Types**: For more depth, add damage types and resistances:

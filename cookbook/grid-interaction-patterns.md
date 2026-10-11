@@ -161,7 +161,7 @@ scene.on_key = handle_key
 
 ### Smooth Animated Movement
 
-For visual smoothness, animate the entity position:
+For visual smoothness, animate the entity's draw position, `draw_pos`, in tiles:
 
 ```python
 def handle_key(key, action):
@@ -175,15 +175,14 @@ def handle_key(key, action):
         if 0 <= new_x < grid_w and 0 <= new_y < grid_h:
             point = player.grid.at(new_x, new_y)
             if point.walkable:
-                player.animate("x", float(new_x), 0.15, mcrfpy.Easing.EASE_OUT_QUAD)
-                player.animate("y", float(new_y), 0.15, mcrfpy.Easing.EASE_OUT_QUAD)
+                player.animate("draw_pos", (new_x, new_y), 0.15, mcrfpy.Easing.EASE_OUT_QUAD)
                 player.grid_x = new_x
                 player.grid_y = new_y
 
 scene.on_key = handle_key
 ```
 
-Entity `animate("x", ...)` accepts `'x'`/`'y'` as aliases for the tile-coordinate properties `draw_x`/`draw_y`, giving smooth per-frame interpolation while `grid_x`/`grid_y` update the logical cell immediately.
+`draw_pos` interpolates the sprite smoothly while `grid_x`/`grid_y` update the logical cell immediately. An entity's `x`, `y` and `pos` are pixels, and animate in pixels. (Before 0.3.0, `animate("x", ...)` on an entity took tile units, and `"draw_x"`/`"draw_y"` were accepted; those names now raise `ValueError` pointing at `"draw_pos"`.)
 
 ---
 
