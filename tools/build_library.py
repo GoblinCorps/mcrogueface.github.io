@@ -32,8 +32,10 @@ sys.path.insert(0, str(Path(__file__).parent))
 from lzstring import compress_to_encoded_uri_component  # noqa: E402
 
 # --- Fixed locations ---------------------------------------------------------
-SITE_ROOT = Path("/home/john/Development/mcrogueface.github.io")
-ENGINE_ROOT = Path("/home/john/Development/McRogueFace")
+# This script's own checkout, and the engine checked out beside it (the same layout
+# build_reference.py assumes). Never absolute: a clone elsewhere must write to itself.
+SITE_ROOT = Path(__file__).resolve().parent.parent
+ENGINE_ROOT = (SITE_ROOT / ".." / "McRogueFace").resolve()
 
 # The snippets live in the ENGINE repo (tests/snippets/), not here. They are executed by
 # McRogueFace's test suite, so breaking the API breaks the build -- and the `status=ok`
