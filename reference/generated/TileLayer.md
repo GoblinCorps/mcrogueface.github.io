@@ -6,11 +6,11 @@ mcrf:
     - TileLayer
   diataxis: reference
   source: generated
-  verified: 0.2.8-dev
-  verified_commit: a46667d
+  verified: 0.3.1
+  verified_commit: ""
 ---
 
-# TileLayer
+# TileLayer {% include api_badge.html kind="changed" version="0.2.8-dev" %}
 
 {% raw %}TileLayer(z_index=-1, name=None, texture=None, grid_size=None)
 
@@ -25,9 +25,9 @@ Args:
         below entities (as backgrounds), positive values render above entities
         (as overlays). Default: -1 (background)
     name (str): Layer name for Grid.layer(name) lookup. Default: None
-    texture (Texture): Sprite atlas containing tile images. The texture's
-        sprite_size determines individual tile dimensions. Required for
-        rendering; can be set after creation. Default: None
+    texture (Texture): Sprite atlas containing tile images. Default: None,
+        drawing with the grid's texture (looked up when drawn, so changing
+        the grid's texture restyles this layer).
     grid_size (tuple): Dimensions as (width, height). If None or (0, 0), the
         layer will auto-resize when attached to a Grid. Default: None
 
@@ -35,7 +35,7 @@ Attributes:
     z_index (int): Layer z-order relative to entities (read/write)
     name (str): Layer name for lookup (read-only)
     visible (bool): Whether layer is rendered (read/write)
-    texture (Texture): Sprite atlas for tile images (read/write)
+    texture (Texture | None): Its own atlas; None draws with the grid's
     grid_size (tuple): Layer dimensions as (width, height) (read-only)
     grid (Grid): Parent Grid or None. Setting manages layer association.
 
@@ -62,7 +62,7 @@ Example:
 | `grid` | {% raw %}Parent Grid or None (Grid \| None). Setting manages layer association and handles lazy allocation.{% endraw %} |
 | `grid_size` | {% raw %}Layer dimensions as (width, height) tuple (tuple, read-only).{% endraw %} |
 | `name` | {% raw %}Layer name (str, read-only). Used for Grid.layer(name) lookup.{% endraw %} |
-| `texture` | {% raw %}Texture atlas for tile sprites (Texture \| None).{% endraw %} |
+| `texture` {% include api_badge.html kind="changed" version="0.2.8-dev" %} | {% raw %}This layer's own tile atlas (Texture \| None). None: it draws with its grid's texture, looked up each time it's drawn. Assign None to inherit again.{% endraw %} |
 | `visible` | {% raw %}Whether the layer is rendered (bool).{% endraw %} |
 | `z_index` | {% raw %}Layer z-order (int). Negative values render below entities.{% endraw %} |
 

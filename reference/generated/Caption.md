@@ -6,8 +6,8 @@ mcrf:
     - Caption
   diataxis: reference
   source: generated
-  verified: 0.2.8-dev
-  verified_commit: a46667d
+  verified: 0.3.1
+  verified_commit: ""
 ---
 
 # Caption
@@ -65,7 +65,7 @@ Attributes:
 | `bounds` | {% raw %}Axis-aligned bounding box (tuple, read-only) as a (pos, size) pair of Vectors: (Vector(x, y), Vector(width, height)).{% endraw %} |
 | `fill_color` | {% raw %}Fill color of the text (Color). Returns a copy; modifying components requires reassignment. For animation, use 'fill_color.r', 'fill_color.g', etc.{% endraw %} |
 | `font` | {% raw %}Font used for text rendering (Font, read-only). Reflects the engine default font when none was provided at construction.{% endraw %} |
-| `font_size` | {% raw %}Font size in points (int). Clamped to the range [0, 65535].{% endraw %} |
+| `font_size` {% include api_badge.html kind="changed" version="0.2.8-dev" %} | {% raw %}Font size in pixels (int), 0 to 2048. Raises ValueError outside that range.{% endraw %} |
 | `global_bounds` | {% raw %}Axis-aligned bounding box in screen coordinates (tuple, read-only) as a (pos, size) pair of Vectors: (Vector(x, y), Vector(width, height)).{% endraw %} |
 | `global_position` | {% raw %}Global screen position (read-only). Calculates absolute position by walking up the parent chain.{% endraw %} |
 | `grid_pos` | {% raw %}Position in grid tile coordinates (Vector). Only valid when parent is a Grid.{% endraw %} |
@@ -81,7 +81,7 @@ Attributes:
 | `on_move` | {% raw %}Callback for mouse movement within bounds. Called with (pos: Vector) for each mouse movement while inside. Performance note: Called frequently during movement - keep handlers fast.{% endraw %} |
 | `opacity` | {% raw %}Opacity level (0.0 = transparent, 1.0 = opaque). Automatically clamped to valid range [0.0, 1.0].{% endraw %} |
 | `origin` | {% raw %}Transform origin as Vector (pivot point for rotation). Default (0,0) is top-left; set to (w/2, h/2) to rotate around center.{% endraw %} |
-| `outline` | {% raw %}Thickness of the text outline border (float). Clamped to non-negative values.{% endraw %} |
+| `outline` {% include api_badge.html kind="changed" version="0.2.8-dev" %} | {% raw %}Thickness of the text outline border in pixels (float), 0 to 2048. Raises ValueError outside that range.{% endraw %} |
 | `outline_color` | {% raw %}Outline color of the text (Color). Returns a copy; modifying components requires reassignment. For animation, use 'outline_color.r', 'outline_color.g', etc.{% endraw %} |
 | `parent` | {% raw %}Parent drawable. Get: Returns the parent Frame/Grid if nested, or None if at scene level. Set: Assign a Frame/Grid to reparent, or None to remove from parent.{% endraw %} |
 | `pos` | {% raw %}Position as (x, y) Vector.{% endraw %} |
@@ -100,15 +100,15 @@ Attributes:
 
 ## Methods
 
-### `animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation`
+### `animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation` {% include api_badge.html kind="changed" version="0.2.8-dev" %}
 
 {% raw %}animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation
 
 Create and start an animation on this drawable's property.
 
 Args:
-    property: Name of the property to animate (e.g., 'x', 'fill_color', 'opacity')
-    target: Target value - type depends on property (float, tuple for color/vector, etc.)
+    property: Name of the attribute to animate (e.g., 'x', 'pos', 'fill_color', 'opacity'), or one channel of a Color attribute ('fill_color.r')
+    target: Target value, of the attribute's type: a number, a Vector or (x, y), a Color or (r, g, b[, a]), an int (or list of ints to step through), or a str
     duration: Animation duration in seconds
     easing: Easing function: Easing enum value, string name, or None for linear
     delta: If True, target is relative to current value; if False, target is absolute
@@ -120,7 +120,10 @@ Returns:
     Animation object for monitoring progress
 
 Raises:
-    ValueError: If property name is not valid for this drawable type
+    ValueError: If the name is not an animatable attribute of this drawable
+
+Raises:
+    TypeError: If the target is not of the attribute's type
 
 Note:
     This is a convenience method that creates an Animation, starts it, and adds it to the AnimationManager.

@@ -6,8 +6,8 @@ mcrf:
     - Music
   diataxis: reference
   source: generated
-  verified: 0.2.8-dev
-  verified_commit: a46667d
+  verified: 0.3.1
+  verified_commit: ""
 ---
 
 # Music
@@ -35,12 +35,15 @@ Pause the music. Use play() to resume from the paused position.
 
 {% endraw %}
 
-### `play() -> None`
+### `play() -> None` {% include api_badge.html kind="changed" version="0.2.8-dev" %}
 
 {% raw %}play() -> None
 
 Start or resume playing the music.
 
+
+Note:
+    The engine keeps playing music alive, so it plays on without a held reference. Does nothing when audio is off (--audio-off, or --headless without --audio-on).
 {% endraw %}
 
 ### `stop() -> None`

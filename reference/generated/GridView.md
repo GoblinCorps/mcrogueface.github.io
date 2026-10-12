@@ -6,11 +6,11 @@ mcrf:
     - GridView
   diataxis: reference
   source: generated
-  verified: 0.2.8-dev
-  verified_commit: a46667d
+  verified: 0.3.1
+  verified_commit: ""
 ---
 
-# GridView
+# GridView {% include api_badge.html kind="changed" version="0.2.8-dev" %}
 
 {% raw %}Grid(grid_size=None, pos=None, size=None, texture=None, **kwargs)
 
@@ -24,8 +24,11 @@ Can also be constructed as a view of existing grid data:
 Args:
     grid_size (tuple): Grid dimensions as (grid_w, grid_h). Default: (2, 2)
     pos (tuple): Position as (x, y). Default: (0, 0)
-    size (tuple): Size as (w, h). Default: auto-calculated
-    texture (Texture): Tile texture atlas. Default: default texture
+    size (tuple): Size as (w, h). Default: the whole map at 1:1 (grid_size x
+        cell_size), following the cell size if it changes.
+    texture (Texture): Tile texture atlas; its sprite size is the cell size.
+        Default: None -- assigned mcrfpy.default_texture (with a
+        TextureWarning) when the grid is first drawn.
 
 Keyword Args:
     grid (Grid): Existing Grid to view (creates view of shared data).
@@ -78,7 +81,7 @@ Keyword Args:
 | `rotation` | {% raw %}Rotation angle in degrees (clockwise around origin). Animatable property.{% endraw %} |
 | `shader` | {% raw %}Shader for GPU visual effects (Shader or None). When set, the drawable is rendered through the shader program. Set to None to disable shader effects.{% endraw %} |
 | `size` {% include api_badge.html kind="added" version="0.2.8-dev" %} | {% raw %}Size of the grid widget in pixels as (w, h) (Vector). This is the viewport, not the map: the map's dimensions are grid_size.{% endraw %} |
-| `texture` | {% raw %}Texture used for tile rendering (Texture \| None, read-only).{% endraw %} |
+| `texture` {% include api_badge.html kind="changed" version="0.2.8-dev" %} | {% raw %}The GridData's tile atlas (Texture \| None); setting it sets the data's. Layers and entities with no texture of their own draw with it.{% endraw %} |
 | `uniforms` | {% raw %}Collection of shader uniforms (read-only access to collection). Set uniforms via dict-like syntax: drawable.uniforms['name'] = value. Supports float, vec2/3/4 tuples, PropertyBinding, and CallableBinding.{% endraw %} |
 | `vert_margin` | {% raw %}Vertical margin override (float, 0 = use general margin). Invalid for horizontally-centered alignments (CENTER_LEFT, CENTER_RIGHT, CENTER).{% endraw %} |
 | `visible` | {% raw %}Whether the object is visible (bool). Invisible objects are not rendered or clickable.{% endraw %} |
@@ -90,15 +93,15 @@ Keyword Args:
 
 ## Methods
 
-### `animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation`
+### `animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation` {% include api_badge.html kind="changed" version="0.2.8-dev" %}
 
 {% raw %}animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation
 
 Create and start an animation on this drawable's property.
 
 Args:
-    property: Name of the property to animate (e.g., 'x', 'fill_color', 'opacity')
-    target: Target value - type depends on property (float, tuple for color/vector, etc.)
+    property: Name of the attribute to animate (e.g., 'x', 'pos', 'fill_color', 'opacity'), or one channel of a Color attribute ('fill_color.r')
+    target: Target value, of the attribute's type: a number, a Vector or (x, y), a Color or (r, g, b[, a]), an int (or list of ints to step through), or a str
     duration: Animation duration in seconds
     easing: Easing function: Easing enum value, string name, or None for linear
     delta: If True, target is relative to current value; if False, target is absolute
@@ -110,7 +113,10 @@ Returns:
     Animation object for monitoring progress
 
 Raises:
-    ValueError: If property name is not valid for this drawable type
+    ValueError: If the name is not an animatable attribute of this drawable
+
+Raises:
+    TypeError: If the target is not of the attribute's type
 
 Note:
     This is a convenience method that creates an Animation, starts it, and adds it to the AnimationManager.

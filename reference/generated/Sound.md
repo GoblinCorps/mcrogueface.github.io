@@ -6,8 +6,8 @@ mcrf:
     - Sound
   diataxis: reference
   source: generated
-  verified: 0.2.8-dev
-  verified_commit: a46667d
+  verified: 0.3.1
+  verified_commit: ""
 ---
 
 # Sound
@@ -51,29 +51,38 @@ Pause the sound. Use play() to resume from the paused position.
 
 {% endraw %}
 
-### `play() -> None`
+### `play() -> None` {% include api_badge.html kind="changed" version="0.2.8-dev" %}
 
 {% raw %}play() -> None
 
 Start or resume playing the sound.
 
+
+Note:
+    The engine keeps a playing sound alive, so Sound(...).play() plays to the end without holding a reference. Does nothing when audio is off (--audio-off, or --headless without --audio-on).
 {% endraw %}
 
-### `play_varied(pitch_range: float = 0.1, volume_range: float = 3.0) -> None`
+### `play_varied(pitch_range: float = 0.1, volume_range: float = 3.0) -> tuple[float, float]` {% include api_badge.html kind="changed" version="0.2.8-dev" %}
 
-{% raw %}play_varied(pitch_range: float = 0.1, volume_range: float = 3.0) -> None
+{% raw %}play_varied(pitch_range: float = 0.1, volume_range: float = 3.0) -> tuple[float, float]
 
-Play with randomized pitch and volume for natural variation.
+Play an extra voice with randomized pitch and volume for natural variation. Voices overlap, so rapid calls (footsteps, hits) layer instead of restarting.
 
 Args:
     pitch_range: Random pitch offset range (default 0.1)
     volume_range: Random volume offset range (default 3.0)
+
+Returns:
+    tuple[float, float]: the (pitch, volume) drawn for this voice. The sound's own pitch/volume properties are not changed, and .playing reports only play(), so this return value is the only record of the draw.
+
+Note:
+    The randomness comes from the engine's AUDIO random stream. Set mcrfpy.set_random_seed() to make the variation reproducible; read mcrfpy.get_random_seed() to learn the seed a run used. The AUDIO stream is independent of the entity-behaviour stream, so playing sounds never changes how entities move.
 {% endraw %}
 
-### `stop() -> None`
+### `stop() -> None` {% include api_badge.html kind="changed" version="0.2.8-dev" %}
 
 {% raw %}stop() -> None
 
-Stop playing and reset to the beginning.
+Stop playing and reset to the beginning. Also stops play_varied() voices.
 
 {% endraw %}

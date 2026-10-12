@@ -6,8 +6,8 @@ mcrf:
     - Keyboard
   diataxis: reference
   source: generated
-  verified: 0.2.8-dev
-  verified_commit: a46667d
+  verified: 0.3.1
+  verified_commit: ""
 ---
 
 # Keyboard

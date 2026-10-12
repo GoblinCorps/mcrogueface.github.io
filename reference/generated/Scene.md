@@ -6,8 +6,8 @@ mcrf:
     - Scene
   diataxis: reference
   source: generated
-  verified: 0.2.8-dev
-  verified_commit: a46667d
+  verified: 0.3.1
+  verified_commit: ""
 ---
 
 # Scene
@@ -97,7 +97,7 @@ Note:
     Call this after window resize or when game_resolution changes. For responsive layouts, connect this to on_resize callback.
 {% endraw %}
 
-### `register() -> None`
+### `register() -> None` {% include api_badge.html kind="changed" version="0.2.8-dev" %}
 
 {% raw %}register() -> None
 
@@ -105,7 +105,7 @@ Register this scene with the game engine.
 
 
 Note:
-    Makes the scene available for activation and receives lifecycle callbacks. If another scene with the same name exists, it will be unregistered first. Called automatically by activate() if needed.
+    Makes the scene available for activation and receives lifecycle callbacks. If another scene has the same name, that scene is unregistered and keeps its children; if it was being shown, this scene is shown instead. Called automatically by activate() if needed.
 {% endraw %}
 
 ### `unregister() -> None`

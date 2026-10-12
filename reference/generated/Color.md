@@ -6,8 +6,8 @@ mcrf:
     - Color
   diataxis: reference
   source: generated
-  verified: 0.2.8-dev
-  verified_commit: a46667d
+  verified: 0.3.1
+  verified_commit: ""
 ---
 
 # Color
@@ -46,10 +46,10 @@ Note:
 
 | Property | Description |
 | --- | --- |
-| `a` | {% raw %}Alpha component (0-255, where 0=transparent, 255=opaque). Automatically clamped to valid range.{% endraw %} |
-| `b` | {% raw %}Blue component (0-255). Automatically clamped to valid range.{% endraw %} |
-| `g` | {% raw %}Green component (0-255). Automatically clamped to valid range.{% endraw %} |
-| `r` | {% raw %}Red component (0-255). Automatically clamped to valid range.{% endraw %} |
+| `a` {% include api_badge.html kind="changed" version="0.2.8-dev" %} | {% raw %}Alpha component, an int in 0-255 (0=transparent, 255=opaque); out of range raises ValueError.{% endraw %} |
+| `b` {% include api_badge.html kind="changed" version="0.2.8-dev" %} | {% raw %}Blue component, an int in 0-255; out of range raises ValueError.{% endraw %} |
+| `g` {% include api_badge.html kind="changed" version="0.2.8-dev" %} | {% raw %}Green component, an int in 0-255; out of range raises ValueError.{% endraw %} |
+| `r` {% include api_badge.html kind="changed" version="0.2.8-dev" %} | {% raw %}Red component, an int in 0-255; out of range raises ValueError.{% endraw %} |
 
 ## Methods
 

@@ -6,11 +6,11 @@ mcrf:
     - Entity
   diataxis: reference
   source: generated
-  verified: 0.2.8-dev
-  verified_commit: a46667d
+  verified: 0.3.1
+  verified_commit: ""
 ---
 
-# Entity
+# Entity {% include api_badge.html kind="changed" version="0.2.8-dev" %}
 
 {% raw %}Entity(grid_pos=None, texture=None, sprite_index=0, **kwargs)
 
@@ -18,7 +18,7 @@ A game entity that exists on a grid with sprite rendering.
 
 Args:
     grid_pos (tuple, optional): Grid position as (x, y) tuple. Default: (0, 0)
-    texture (Texture, optional): Texture object for sprite. Default: default texture
+    texture (Texture, optional): Texture object for sprite. Default: None (draws with its grid's texture)
     sprite_index (int, optional): Index into texture atlas. Default: 0
 
 Keyword Args:
@@ -38,7 +38,7 @@ Attributes:
     grid_x, grid_y (int): Integer tile coordinate components
     draw_pos (Vector): Fractional tile position for smooth animation
     perspective_map (DiscreteMap | None): 3-state per-entity FOV memory
-    texture (Texture): Texture atlas used by the entity's sprite
+    texture (Texture | None): Its own sprite atlas; None draws with its grid's
     sprite_index (int): Current sprite index
     visible (bool): Visibility state
     opacity (float): Opacity value
@@ -76,7 +76,7 @@ Attributes:
 | `sprite_offset_y` | {% raw %}Y component of sprite pixel offset (float).{% endraw %} |
 | `step` | {% raw %}Step callback for grid.step() turn management (Callable or None). Called with (trigger, data) when behavior triggers fire.{% endraw %} |
 | `target_label` | {% raw %}Label to search for with TARGET trigger (str or None). Default: None.{% endraw %} |
-| `texture` | {% raw %}Sprite texture atlas (Texture). Defaults to mcrfpy.default_texture at construction. Setting preserves sprite_index (not re-validated against the new atlas).{% endraw %} |
+| `texture` {% include api_badge.html kind="changed" version="0.2.8-dev" %} | {% raw %}The entity's own sprite atlas (Texture \| None). None: it has none of its own and draws with its grid's texture, looked up each time it's drawn. Assign None to inherit again. Setting preserves sprite_index (not re-validated against the new atlas).{% endraw %} |
 | `tile_height` | {% raw %}Entity height in tiles (int). Must be >= 1. Default 1.{% endraw %} |
 | `tile_size` | {% raw %}Entity size in tiles as (width, height) (Vector). Default (1, 1).{% endraw %} |
 | `tile_width` | {% raw %}Entity width in tiles (int). Must be >= 1. Default 1.{% endraw %} |
@@ -101,15 +101,15 @@ Returns:
     None
 {% endraw %}
 
-### `animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation`
+### `animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation` {% include api_badge.html kind="changed" version="0.2.8-dev" %}
 
 {% raw %}animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation
 
 Create and start an animation on this entity's property.
 
 Args:
-    property: Name of the property to animate: 'draw_x', 'draw_y' (tile coords), 'sprite_scale', 'sprite_index', 'sprite_offset_x', 'sprite_offset_y'
-    target: Target value - float, int, or list of int (for sprite frame sequences)
+    property: Name of the attribute to animate: 'draw_pos' (tiles), 'x', 'y', 'pos' (pixels), 'opacity', 'sprite_index', 'sprite_offset', 'sprite_offset_x', 'sprite_offset_y', or 'shader.<uniform>'
+    target: Target value, of the attribute's type: a number, a Vector or (x, y), or an int (or list of ints to step through sprite frames)
     duration: Animation duration in seconds
     easing: Easing function: Easing enum value, string name, or None for linear
     delta: If True, target is relative to current value; if False, target is absolute
@@ -121,10 +121,16 @@ Returns:
     Animation object for monitoring progress
 
 Raises:
-    ValueError: If property name is not valid for Entity (draw_x, draw_y, sprite_scale, sprite_index, sprite_offset_x, sprite_offset_y)
+    ValueError: If the name is not an animatable attribute of Entity
+
+Raises:
+    TypeError: If the target is not of the attribute's type
+
+Raises:
+    RuntimeError: Animating 'x', 'y' or 'pos' on an entity that is not on a grid
 
 Note:
-    Use 'draw_x'/'draw_y' to animate tile coordinates for smooth movement between grid cells. Use list target with loop=True for repeating sprite frame animations. 'x' and 'y' are accepted as aliases for 'draw_x' and 'draw_y'.
+    Animate 'draw_pos' for smooth tile-to-tile movement: e.animate('draw_pos', (5, 3), 0.2). 'x', 'y' and 'pos' are pixels, the same as assigning them. Use a list target with loop=True for repeating sprite frame animations.
 {% endraw %}
 
 ### `at(x: int, y: int) -> GridPoint | None`

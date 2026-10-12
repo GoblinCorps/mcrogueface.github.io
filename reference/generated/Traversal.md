@@ -6,8 +6,8 @@ mcrf:
     - Traversal
   diataxis: reference
   source: generated
-  verified: 0.2.8-dev
-  verified_commit: a46667d
+  verified: 0.3.1
+  verified_commit: ""
 ---
 
 # Traversal
@@ -60,7 +60,7 @@ Also known as the population count.
 
 {% raw %}Returns self, the complex conjugate of any int.{% endraw %}
 
-### `from_bytes($type, /, bytes, byteorder='big', *, signed=False)`
+### `from_bytes($type, /, bytes, byteorder='big', *, signed=False)` {% include api_badge.html kind="changed" version="0.2.8-dev" %}
 
 *classmethod*
 
@@ -68,37 +68,40 @@ Also known as the population count.
 
   bytes
     Holds the array of bytes to convert.  The argument must either
-    support the buffer protocol or be an iterable object producing bytes.
-    Bytes and bytearray are examples of built-in objects that support the
-    buffer protocol.
+    support the buffer protocol or be an iterable object producing
+    bytes.  Bytes and bytearray are examples of built-in objects that
+    support the buffer protocol.
   byteorder
-    The byte order used to represent the integer.  If byteorder is 'big',
-    the most significant byte is at the beginning of the byte array.  If
-    byteorder is 'little', the most significant byte is at the end of the
-    byte array.  To request the native byte order of the host system, use
-    sys.byteorder as the byte order value.  Default is to use 'big'.
+    The byte order used to represent the integer.  If byteorder is
+    'big', the most significant byte is at the beginning of the byte
+    array.  If byteorder is 'little', the most significant byte is at
+    the end of the byte array.  To request the native byte order of
+    the host system, use sys.byteorder as the byte order value.
+    Default is to use 'big'.
   signed
-    Indicates whether two's complement is used to represent the integer.{% endraw %}
+    Indicates whether two's complement is used to represent the
+    integer.{% endraw %}
 
 ### `is_integer($self, /)`
 
 {% raw %}Returns True. Exists for duck type compatibility with float.is_integer.{% endraw %}
 
-### `to_bytes($self, /, length=1, byteorder='big', *, signed=False)`
+### `to_bytes($self, /, length=1, byteorder='big', *, signed=False)` {% include api_badge.html kind="changed" version="0.2.8-dev" %}
 
 {% raw %}Return an array of bytes representing an integer.
 
   length
-    Length of bytes object to use.  An OverflowError is raised if the
-    integer is not representable with the given number of bytes.  Default
-    is length 1.
+    Length of bytes object to use.  An OverflowError is raised if
+    the integer is not representable with the given number of bytes.
+    Default is length 1.
   byteorder
-    The byte order used to represent the integer.  If byteorder is 'big',
-    the most significant byte is at the beginning of the byte array.  If
-    byteorder is 'little', the most significant byte is at the end of the
-    byte array.  To request the native byte order of the host system, use
-    sys.byteorder as the byte order value.  Default is to use 'big'.
+    The byte order used to represent the integer.  If byteorder is
+    'big', the most significant byte is at the beginning of the byte
+    array.  If byteorder is 'little', the most significant byte is at
+    the end of the byte array.  To request the native byte order of
+    the host system, use sys.byteorder as the byte order value.
+    Default is to use 'big'.
   signed
-    Determines whether two's complement is used to represent the integer.
-    If signed is False and a negative integer is given, an OverflowError
-    is raised.{% endraw %}
+    Determines whether two's complement is used to represent the
+    integer.  If signed is False and a negative integer is given,
+    an OverflowError is raised.{% endraw %}

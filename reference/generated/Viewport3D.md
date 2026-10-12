@@ -6,8 +6,8 @@ mcrf:
     - Viewport3D
   diataxis: reference
   source: generated
-  verified: 0.2.8-dev
-  verified_commit: a46667d
+  verified: 0.3.1
+  verified_commit: ""
 ---
 
 # Viewport3D
@@ -49,7 +49,7 @@ Keyword Args:
 | `enable_fog` | {% raw %}Enable distance fog.{% endraw %} |
 | `enable_vertex_snap` | {% raw %}Enable PS1-style vertex snapping (jittery vertices).{% endraw %} |
 | `entities` | {% raw %}Collection of Entity3D objects (read-only). Use append/remove to modify.{% endraw %} |
-| `fog_color` | {% raw %}Fog color.{% endraw %} |
+| `fog_color` {% include api_badge.html kind="changed" version="0.2.8-dev" %} | {% raw %}Fog color. Fog is opaque: alpha is ignored and reads back as 255.{% endraw %} |
 | `fog_far` | {% raw %}Fog end distance.{% endraw %} |
 | `fog_near` | {% raw %}Fog start distance.{% endraw %} |
 | `fov` | {% raw %}Camera field of view in degrees.{% endraw %} |
@@ -66,6 +66,7 @@ Keyword Args:
 | `parent` | {% raw %}Parent drawable. Get: Returns the parent Frame/Grid if nested, or None if at scene level. Set: Assign a Frame/Grid to reparent, or None to remove from parent.{% endraw %} |
 | `pos` | {% raw %}Position as Vector (x, y).{% endraw %} |
 | `render_resolution` | {% raw %}Internal render resolution (width, height). Lower values for PS1 effect.{% endraw %} |
+| `size` {% include api_badge.html kind="added" version="0.2.8-dev" %} | {% raw %}Display size (Vector).{% endraw %} |
 | `visible` | {% raw %}Whether the object is visible (bool). Invisible objects are not rendered or clickable.{% endraw %} |
 | `w` | {% raw %}Display width in pixels.{% endraw %} |
 | `x` | {% raw %}X position in pixels.{% endraw %} |
@@ -119,15 +120,15 @@ Args:
     voxel_grid: VoxelGrid object to render
     z_index: Render order (lower = rendered first){% endraw %}
 
-### `animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation`
+### `animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation` {% include api_badge.html kind="changed" version="0.2.8-dev" %}
 
 {% raw %}animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation
 
 Create and start an animation on this drawable's property.
 
 Args:
-    property: Name of the property to animate (e.g., 'x', 'fill_color', 'opacity')
-    target: Target value - type depends on property (float, tuple for color/vector, etc.)
+    property: Name of the attribute to animate (e.g., 'x', 'pos', 'fill_color', 'opacity'), or one channel of a Color attribute ('fill_color.r')
+    target: Target value, of the attribute's type: a number, a Vector or (x, y), a Color or (r, g, b[, a]), an int (or list of ints to step through), or a str
     duration: Animation duration in seconds
     easing: Easing function: Easing enum value, string name, or None for linear
     delta: If True, target is relative to current value; if False, target is absolute
@@ -139,7 +140,10 @@ Returns:
     Animation object for monitoring progress
 
 Raises:
-    ValueError: If property name is not valid for this drawable type
+    ValueError: If the name is not an animatable attribute of this drawable
+
+Raises:
+    TypeError: If the target is not of the attribute's type
 
 Note:
     This is a convenience method that creates an Animation, starts it, and adds it to the AnimationManager.

@@ -6,8 +6,8 @@ mcrf:
     - SoundBuffer
   diataxis: reference
   source: generated
-  verified: 0.2.8-dev
-  verified_commit: a46667d
+  verified: 0.3.1
+  verified_commit: ""
 ---
 
 # SoundBuffer
@@ -80,7 +80,7 @@ Apply echo effect with delay, feedback, and wet/dry mix.
 
 {% endraw %}
 
-### `from_samples(data: bytes, channels: int, sample_rate: int) -> SoundBuffer`
+### `from_samples(data: bytes, channels: int, sample_rate: int) -> SoundBuffer` {% include api_badge.html kind="changed" version="0.2.8-dev" %}
 
 *classmethod*
 
@@ -92,6 +92,9 @@ Args:
     data: Raw PCM data as bytes (int16 little-endian)
     channels: Number of audio channels (1=mono, 2=stereo)
     sample_rate: Sample rate in Hz (e.g. 44100)
+
+Raises:
+    ValueError: data is empty or not a whole number of frames (channels * 2 bytes), or channels/sample_rate is 0
 {% endraw %}
 
 ### `gain(factor: float) -> SoundBuffer`

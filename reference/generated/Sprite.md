@@ -6,8 +6,8 @@ mcrf:
     - Sprite
   diataxis: reference
   source: generated
-  verified: 0.2.8-dev
-  verified_commit: a46667d
+  verified: 0.3.1
+  verified_commit: ""
 ---
 
 # Sprite
@@ -94,15 +94,15 @@ Attributes:
 
 ## Methods
 
-### `animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation`
+### `animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation` {% include api_badge.html kind="changed" version="0.2.8-dev" %}
 
 {% raw %}animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation
 
 Create and start an animation on this drawable's property.
 
 Args:
-    property: Name of the property to animate (e.g., 'x', 'fill_color', 'opacity')
-    target: Target value - type depends on property (float, tuple for color/vector, etc.)
+    property: Name of the attribute to animate (e.g., 'x', 'pos', 'fill_color', 'opacity'), or one channel of a Color attribute ('fill_color.r')
+    target: Target value, of the attribute's type: a number, a Vector or (x, y), a Color or (r, g, b[, a]), an int (or list of ints to step through), or a str
     duration: Animation duration in seconds
     easing: Easing function: Easing enum value, string name, or None for linear
     delta: If True, target is relative to current value; if False, target is absolute
@@ -114,7 +114,10 @@ Returns:
     Animation object for monitoring progress
 
 Raises:
-    ValueError: If property name is not valid for this drawable type
+    ValueError: If the name is not an animatable attribute of this drawable
+
+Raises:
+    TypeError: If the target is not of the attribute's type
 
 Note:
     This is a convenience method that creates an Animation, starts it, and adds it to the AnimationManager.

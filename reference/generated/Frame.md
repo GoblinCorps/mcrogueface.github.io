@@ -6,8 +6,8 @@ mcrf:
     - Frame
   diataxis: reference
   source: generated
-  verified: 0.2.8-dev
-  verified_commit: a46667d
+  verified: 0.3.1
+  verified_commit: ""
 ---
 
 # Frame
@@ -92,6 +92,7 @@ Attributes:
 | `rotate_with_camera` {% include api_badge.html kind="changed" version="0.2.8-dev" %} | {% raw %}Whether to rotate visually with parent Grid's camera_rotation (bool). False (default): stay screen-aligned. True: tilt with camera. Only affects children of a Grid; ignored for other parents.{% endraw %} |
 | `rotation` | {% raw %}Rotation angle in degrees (clockwise around origin). Animatable property.{% endraw %} |
 | `shader` | {% raw %}Shader for GPU visual effects (Shader or None). When set, the drawable is rendered through the shader program. Set to None to disable shader effects.{% endraw %} |
+| `size` {% include api_badge.html kind="added" version="0.2.8-dev" %} | {% raw %}Size of the rectangle as a Vector (w, h).{% endraw %} |
 | `uniforms` | {% raw %}Collection of shader uniforms (read-only access to collection). Set uniforms via dict-like syntax: drawable.uniforms['name'] = value. Supports float, vec2/3/4 tuples, PropertyBinding, and CallableBinding.{% endraw %} |
 | `vert_margin` | {% raw %}Vertical margin override (float, 0 = use general margin). Invalid for horizontally-centered alignments (CENTER_LEFT, CENTER_RIGHT, CENTER).{% endraw %} |
 | `visible` | {% raw %}Whether the object is visible (bool). Invisible objects are not rendered or clickable.{% endraw %} |
@@ -102,15 +103,15 @@ Attributes:
 
 ## Methods
 
-### `animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation`
+### `animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation` {% include api_badge.html kind="changed" version="0.2.8-dev" %}
 
 {% raw %}animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation
 
 Create and start an animation on this drawable's property.
 
 Args:
-    property: Name of the property to animate (e.g., 'x', 'fill_color', 'opacity')
-    target: Target value - type depends on property (float, tuple for color/vector, etc.)
+    property: Name of the attribute to animate (e.g., 'x', 'pos', 'fill_color', 'opacity'), or one channel of a Color attribute ('fill_color.r')
+    target: Target value, of the attribute's type: a number, a Vector or (x, y), a Color or (r, g, b[, a]), an int (or list of ints to step through), or a str
     duration: Animation duration in seconds
     easing: Easing function: Easing enum value, string name, or None for linear
     delta: If True, target is relative to current value; if False, target is absolute
@@ -122,7 +123,10 @@ Returns:
     Animation object for monitoring progress
 
 Raises:
-    ValueError: If property name is not valid for this drawable type
+    ValueError: If the name is not an animatable attribute of this drawable
+
+Raises:
+    TypeError: If the target is not of the attribute's type
 
 Note:
     This is a convenience method that creates an Animation, starts it, and adds it to the AnimationManager.
