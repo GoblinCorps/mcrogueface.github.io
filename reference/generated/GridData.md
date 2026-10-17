@@ -6,7 +6,7 @@ mcrf:
     - GridData
   diataxis: reference
   source: generated
-  verified: 0.3.1
+  verified: 0.3.3
   verified_commit: ""
 ---
 
@@ -160,15 +160,15 @@ Returns:
     None
 {% endraw %}
 
-### `entities_in_radius(pos: tuple | Vector, radius: float) -> list` {% include api_badge.html kind="added" version="0.2.8-dev" %}
+### `entities_in_radius(pos: tuple | Vector, radius: float) -> list` {% include api_badge.html kind="added" version="0.2.8-dev" %} {% include api_badge.html kind="changed" version="0.3.2-dev" %}
 
 {% raw %}entities_in_radius(pos: tuple | Vector, radius: float) -> list
 
-Query entities within radius using spatial hash (O(k) where k = nearby entities).
+Query entities whose logical cell (grid_pos) is within radius, using the spatial hash (O(k) where k = nearby entities). Measured from the cell, not from draw_pos: an entity mid-animation is found at its cell.
 
 Args:
-    pos: Center position as (x, y) tuple, Vector, or other 2-element sequence
-    radius: Search radius
+    pos: Center cell as (x, y) tuple, Vector, or other 2-element sequence (cell units; may be fractional)
+    radius: Search radius in cells
 
 Returns:
     List of Entity objects within the radius

@@ -6,7 +6,7 @@ mcrf:
     - Entity3D
   diataxis: reference
   source: generated
-  verified: 0.3.1
+  verified: 0.3.3
   verified_commit: ""
 ---
 
@@ -57,22 +57,31 @@ Attributes:
 | `pos` | {% raw %}Grid position (x, z). Setting triggers smooth movement.{% endraw %} |
 | `rotation` | {% raw %}Y-axis rotation in degrees.{% endraw %} |
 | `scale` | {% raw %}Uniform scale factor. Can also set as (x, y, z) tuple.{% endraw %} |
+| `scale_x` {% include api_badge.html kind="added" version="0.3.2-dev" %} | {% raw %}X scale factor (float). Animatable.{% endraw %} |
+| `scale_y` {% include api_badge.html kind="added" version="0.3.2-dev" %} | {% raw %}Y scale factor (float). Animatable.{% endraw %} |
+| `scale_z` {% include api_badge.html kind="added" version="0.3.2-dev" %} | {% raw %}Z scale factor (float). Animatable.{% endraw %} |
+| `sprite_index` {% include api_badge.html kind="added" version="0.3.2-dev" %} | {% raw %}Sprite index for billboard rendering (int). Animatable.{% endraw %} |
 | `viewport` | {% raw %}Owning Viewport3D (read-only).{% endraw %} |
 | `visible` | {% raw %}Visibility state.{% endraw %} |
 | `walk_clip` | {% raw %}Animation clip to play when entity is moving.{% endraw %} |
 | `world_pos` | {% raw %}Current world position (x, y, z) (read-only). Includes animation interpolation.{% endraw %} |
+| `world_x` {% include api_badge.html kind="added" version="0.3.2-dev" %} | {% raw %}World-space X (float). Animatable.{% endraw %} |
+| `world_y` {% include api_badge.html kind="added" version="0.3.2-dev" %} | {% raw %}World-space Y, the height (float). Animatable.{% endraw %} |
+| `world_z` {% include api_badge.html kind="added" version="0.3.2-dev" %} | {% raw %}World-space Z (float). Animatable.{% endraw %} |
 
 ## Methods
 
-### `animate(property, target, duration, easing=None, delta=False, callback=None, conflict_mode=None)`
+### `animate(property, target, duration, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace')` {% include api_badge.html kind="changed" version="0.3.2-dev" %}
 
-{% raw %}animate(property, target, duration, easing=None, delta=False, callback=None, conflict_mode=None)
+{% raw %}animate(property, target, duration, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace')
 
 Animate a property over time.
 
 Args:
-    property: Property name (x, y, z, rotation, scale, etc.)
-    target: Target value (float or int)
+    property: A float or int attribute: world_x, world_y, world_z, rotation, scale,
+        scale_x, scale_y, scale_z, sprite_index, visible. Animated in the
+        attribute's units; other names raise ValueError.
+    target: Target value (float, or int for sprite_index/visible)
     duration: Animation duration in seconds
     easing: Easing function (Easing enum or None for linear)
     delta: If True, target is relative to current value

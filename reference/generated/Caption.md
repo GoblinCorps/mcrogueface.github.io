@@ -6,15 +6,20 @@ mcrf:
     - Caption
   diataxis: reference
   source: generated
-  verified: 0.3.1
+  verified: 0.3.3
   verified_commit: ""
 ---
 
-# Caption
+# Caption {% include api_badge.html kind="changed" version="0.3.3-dev" %}
 
 {% raw %}Caption(pos=None, font=None, text='', **kwargs)
 
 A text display UI element with customizable font and styling.
+
+pos is the top-left of the text's line box: with the default
+baseline=TextBaseline.TOP the first baseline sits at pos.y + the
+font's ascent, so a Caption at a grid cell's top-left draws over that
+cell. See TextBaseline for the other anchors.
 
 Args:
     pos (tuple, optional): Position as (x, y) tuple. Default: (0, 0)
@@ -37,6 +42,9 @@ Keyword Args:
     margin (float): Margin from parent edge when aligned. Default: 0
     horiz_margin (float): Horizontal margin override. Default: 0 (use margin)
     vert_margin (float): Vertical margin override. Default: 0 (use margin)
+    baseline (TextBaseline): Which line of the text sits at pos.y.
+        Default: mcrfpy.default_text_baseline at construction (TOP unless
+        changed); changing that default later does not move this caption.
 
 Attributes:
     text (str): The displayed text content
@@ -52,6 +60,9 @@ Attributes:
     z_index (int): Rendering order
     name (str): Element name
     w, h (float): Read-only computed size based on text and font
+    baseline (TextBaseline): Vertical anchor of the text at pos.y
+    ascent, descent, line_height (float): Read-only font metrics at font_size
+    baseline_y (float): Read-only y of the first baseline
     align (Alignment): Alignment relative to parent (or None)
     margin (float): General margin for alignment
     horiz_margin (float): Horizontal margin override
@@ -61,8 +72,13 @@ Attributes:
 
 | Property | Description |
 | --- | --- |
+| `advance` {% include api_badge.html kind="added" version="0.3.2-dev" %} | {% raw %}Pen advance of the text in pixels (float, read-only): sum of glyph advances plus kerning for the widest line. Unlike w, it includes trailing spaces and side bearings, so it is where the next span starts. Unaffected by outline. 0 under MCRF_HEADLESS builds (no font metrics).{% endraw %} |
 | `align` | {% raw %}Alignment relative to parent bounds (Alignment enum or None). When set, position is automatically calculated when parent is assigned or resized. Set to None to disable alignment and use manual positioning.{% endraw %} |
+| `ascent` {% include api_badge.html kind="added" version="0.3.3-dev" %} | {% raw %}Font ascent at this caption's font_size, in px above the baseline (float, read-only). Raises ValueError if the font has no metrics at that size; RuntimeError in an MCRF_HEADLESS build (no font rasterizer).{% endraw %} |
+| `baseline` {% include api_badge.html kind="added" version="0.3.3-dev" %} | {% raw %}Which line of the first text line sits at pos.y (TextBaseline). TOP: the line top, baseline at pos.y + font ascent, so a caption at a grid cell's top-left draws over that cell. BASELINE: pos.y is the baseline. EM_TOP: baseline at pos.y + font_size (the pre-0.3.3 placement). Defaults to mcrfpy.default_text_baseline as it was when the caption was made. Bounds, w, h and advance follow the drawn text.{% endraw %} |
+| `baseline_y` {% include api_badge.html kind="added" version="0.3.3-dev" %} | {% raw %}Y of the first line's baseline where the text starts, in parent coordinates (float, read-only): y + ascent for TOP, y for BASELINE, y + font_size for EM_TOP (less origin.y, and rotated with the text). Raises like ascent.{% endraw %} |
 | `bounds` | {% raw %}Axis-aligned bounding box (tuple, read-only) as a (pos, size) pair of Vectors: (Vector(x, y), Vector(width, height)).{% endraw %} |
+| `descent` {% include api_badge.html kind="added" version="0.3.3-dev" %} | {% raw %}Font descent at this caption's font_size, in px below the baseline, positive (float, read-only). Raises like ascent.{% endraw %} |
 | `fill_color` | {% raw %}Fill color of the text (Color). Returns a copy; modifying components requires reassignment. For animation, use 'fill_color.r', 'fill_color.g', etc.{% endraw %} |
 | `font` | {% raw %}Font used for text rendering (Font, read-only). Reflects the engine default font when none was provided at construction.{% endraw %} |
 | `font_size` {% include api_badge.html kind="changed" version="0.2.8-dev" %} | {% raw %}Font size in pixels (int), 0 to 2048. Raises ValueError outside that range.{% endraw %} |
@@ -73,6 +89,7 @@ Attributes:
 | `h` | {% raw %}Text height in pixels (float, read-only).{% endraw %} |
 | `horiz_margin` | {% raw %}Horizontal margin override (float, 0 = use general margin). Invalid for vertically-centered alignments (TOP_CENTER, BOTTOM_CENTER, CENTER).{% endraw %} |
 | `hovered` | {% raw %}Whether mouse is currently over this element (read-only). Updated automatically by the engine during mouse movement.{% endraw %} |
+| `line_height` {% include api_badge.html kind="added" version="0.3.3-dev" %} | {% raw %}Baseline-to-baseline distance between lines of multi-line text at this font_size, in px (float, read-only). Raises like ascent.{% endraw %} |
 | `margin` | {% raw %}General margin from edge when aligned (float). Applied to both horizontal and vertical edges unless overridden. Invalid for CENTER alignment (raises ValueError).{% endraw %} |
 | `name` | {% raw %}Name for finding elements (str).{% endraw %} |
 | `on_click` | {% raw %}Callable executed when object is clicked. Function receives (pos: Vector, button: MouseButton, action: InputState).{% endraw %} |

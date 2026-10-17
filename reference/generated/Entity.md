@@ -6,7 +6,7 @@ mcrf:
     - Entity
   diataxis: reference
   source: generated
-  verified: 0.3.1
+  verified: 0.3.3
   verified_commit: ""
 ---
 
@@ -56,11 +56,11 @@ Attributes:
 | `cell_x` | {% raw %}Integer X cell coordinate (int). Alias for grid_x.{% endraw %} |
 | `cell_y` | {% raw %}Integer Y cell coordinate (int). Alias for grid_y.{% endraw %} |
 | `default_behavior` | {% raw %}Default behavior type (int, maps to Behavior enum). Entity reverts to this after DONE trigger. Default: 0 (IDLE).{% endraw %} |
-| `draw_pos` | {% raw %}Fractional tile position for rendering (Vector). Use for smooth animation between grid cells.{% endraw %} |
+| `draw_pos` {% include api_badge.html kind="changed" version="0.3.2-dev" %} | {% raw %}Fractional tile position for rendering (Vector). Where the sprite is drawn, nothing more: it does not change the logical cell (grid_pos) or what spatial queries find. Animate it for smooth movement between cells; setting grid_pos snaps it to the cell.{% endraw %} |
 | `grid` | {% raw %}Grid this entity belongs to (Grid or None). Assign a Grid to attach the entity, or None to remove it from its current grid.{% endraw %} |
-| `grid_pos` | {% raw %}Integer logical cell position (Vector). Canonical cell-position property matching the 'grid_pos' constructor argument. Decoupled from draw_pos. Determines which cell this entity logically occupies for collision and pathfinding.{% endraw %} |
-| `grid_x` | {% raw %}Integer X cell coordinate (int). Canonical; matches grid_pos.{% endraw %} |
-| `grid_y` | {% raw %}Integer Y cell coordinate (int). Canonical; matches grid_pos.{% endraw %} |
+| `grid_pos` {% include api_badge.html kind="changed" version="0.3.2-dev" %} | {% raw %}Integer logical cell position (Vector). Canonical cell-position property matching the 'grid_pos' constructor argument. Determines which cell this entity occupies for collision, pathfinding, GridPoint.entities and entities_in_radius. Setting it teleports: draw_pos snaps to the new cell (as grid.step() does); for smooth movement animate draw_pos. Accepts a Vector or (x, y) of ints or whole-number floats; a fractional value raises ValueError.{% endraw %} |
+| `grid_x` {% include api_badge.html kind="changed" version="0.3.2-dev" %} | {% raw %}Integer X cell coordinate (int). Canonical; matches grid_pos. Setting it teleports (draw_pos snaps to the cell). Accepts an int or a whole-number float (5.0); a fractional float raises ValueError.{% endraw %} |
+| `grid_y` {% include api_badge.html kind="changed" version="0.3.2-dev" %} | {% raw %}Integer Y cell coordinate (int). Canonical; matches grid_pos. Setting it teleports (draw_pos snaps to the cell). Accepts an int or a whole-number float (5.0); a fractional float raises ValueError.{% endraw %} |
 | `labels` | {% raw %}String labels for collision and targeting (frozenset). Assign any iterable of strings to replace all labels.{% endraw %} |
 | `move_speed` | {% raw %}Animation duration for behavior movement in seconds (float). 0 = instant. Default: 0.15.{% endraw %} |
 | `name` | {% raw %}Entity name for lookup (str).{% endraw %} |
@@ -71,7 +71,7 @@ Attributes:
 | `sight_radius` | {% raw %}FOV radius for TARGET trigger (int). Default: 10.{% endraw %} |
 | `sprite_grid` | {% raw %}Per-tile sprite indices for composite multi-tile entities (list of lists or None). Row-major, dimensions must match tile_width x tile_height. Use -1 for empty tiles.{% endraw %} |
 | `sprite_index` | {% raw %}Sprite index into the entity's texture atlas (int).{% endraw %} |
-| `sprite_offset` | {% raw %}Pixel offset for oversized sprites (Vector). Applied pre-zoom during grid rendering.{% endraw %} |
+| `sprite_offset` {% include api_badge.html kind="changed" version="0.3.2-dev" %} | {% raw %}Offset for oversized sprites (Vector), in texture pixels: stretched with the sprite when the cell size differs from the grid texture's sprite size, then zoomed.{% endraw %} |
 | `sprite_offset_x` | {% raw %}X component of sprite pixel offset (float).{% endraw %} |
 | `sprite_offset_y` | {% raw %}Y component of sprite pixel offset (float).{% endraw %} |
 | `step` | {% raw %}Step callback for grid.step() turn management (Callable or None). Called with (trigger, data) when behavior triggers fire.{% endraw %} |

@@ -6,7 +6,7 @@ mcrf:
     - Shader
   diataxis: reference
   source: generated
-  verified: 0.3.1
+  verified: 0.3.3
   verified_commit: ""
 ---
 
