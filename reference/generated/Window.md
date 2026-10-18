@@ -6,7 +6,7 @@ mcrf:
     - Window
   diataxis: reference
   source: generated
-  verified: 0.3.3
+  verified: 0.3.4
   verified_commit: ""
 ---
 
@@ -18,9 +18,12 @@ mcrf:
 
 | Property | Description |
 | --- | --- |
+| `console_key` {% include api_badge.html kind="added" version="0.3.4-dev" %} {% include api_badge.html kind="changed" version="0.3.4-dev" %} | {% raw %}Key that toggles the developer console (Key, or None for no hotkey). Default Key.GRAVE. Takes effect immediately; while it is a dev hotkey neither its key events nor the text it types reach on_key/on_text. Windowed desktop builds only: headless and web builds have no console, and the key always reaches the game there. mcrfpy.set_dev_console(False) disables the console and releases the key.{% endraw %} |
+| `explorer_key` {% include api_badge.html kind="added" version="0.3.4-dev" %} {% include api_badge.html kind="changed" version="0.3.4-dev" %} | {% raw %}Key that toggles the scene explorer (Key, or None for no hotkey). Default Key.F4. Same rules as console_key; the tools cannot share a key.{% endraw %} |
 | `framerate_limit` | {% raw %}Frame rate limit in FPS (int, 0 for unlimited). Caps maximum frame rate.{% endraw %} |
 | `fullscreen` | {% raw %}Window fullscreen state (bool). Setting this recreates the window.{% endraw %} |
 | `game_resolution` | {% raw %}Fixed game resolution as (width, height) tuple. Enables resolution-independent rendering with scaling.{% endraw %} |
+| `profiler_key` {% include api_badge.html kind="added" version="0.3.4-dev" %} | {% raw %}Key that toggles the profiler overlay (Key, or None for no hotkey). Default Key.F3. Same rules as console_key; the tools cannot share a key. Works wherever there is a window, desktop and web; headless has no overlay, so the key always reaches the game there.{% endraw %} |
 | `resolution` | {% raw %}Window resolution as (width, height) tuple. Setting this recreates the window.{% endraw %} |
 | `scaling_mode` | {% raw %}Viewport scaling mode (str): 'center' (no scaling), 'stretch' (fill window), or 'fit' (maintain aspect ratio).{% endraw %} |
 | `title` | {% raw %}Window title string (str). Displayed in the window title bar.{% endraw %} |

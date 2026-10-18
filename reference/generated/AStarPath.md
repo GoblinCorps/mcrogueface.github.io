@@ -6,7 +6,7 @@ mcrf:
     - AStarPath
   diataxis: reference
   source: generated
-  verified: 0.3.3
+  verified: 0.3.4
   verified_commit: ""
 ---
 

@@ -6,11 +6,11 @@ mcrf:
     - Scene
   diataxis: reference
   source: generated
-  verified: 0.3.3
+  verified: 0.3.4
   verified_commit: ""
 ---
 
-# Scene
+# Scene {% include api_badge.html kind="changed" version="0.3.4-dev" %}
 
 {% raw %}Scene(name: str)
 
@@ -28,6 +28,7 @@ Properties:
     active (bool, read-only): Whether this scene is currently displayed.
     children (UICollection, read-only): UI elements in this scene. Modify to add/remove elements.
     on_key (callable): Keyboard handler. Set on ANY scene, regardless of which is active!
+    on_text (callable): Text-entry handler, called with (text: str) for typed characters.
     pos (Vector): Position offset for all UI elements.
     visible (bool): Whether the scene renders.
     opacity (float): Scene transparency (0.0-1.0).
@@ -36,6 +37,7 @@ Lifecycle Callbacks (override in subclass):
     on_enter(): Called when scene becomes active via activate().
     on_exit(): Called when scene is deactivated (another scene activates).
     on_key(key: str, action: str): Called for keyboard events (subclass method).
+    on_text(text: str): Called with typed text (subclass method).
     update(dt: float): Called every frame with delta time in seconds.
     on_resize(new_size: Vector): Called when window is resized.
 
@@ -62,6 +64,7 @@ Example:
 | `children` | {% raw %}UI element collection for this scene (UICollection, read-only). Use to add, remove, or iterate over UI elements. Changes are reflected immediately.{% endraw %} |
 | `name` | {% raw %}Scene name (str, read-only). Unique identifier for this scene.{% endraw %} |
 | `on_key` | {% raw %}Keyboard event handler (callable or None). Function receives (key: Key, action: InputState) for keyboard events. Set to None to remove the handler.{% endraw %} |
+| `on_text` {% include api_badge.html kind="added" version="0.3.4-dev" %} | {% raw %}Text-entry handler (callable or None). Function receives (text: str): the characters a key press typed, after keyboard layout, dead-key and IME processing (one UTF-8 str, normally a single code point). Separate from on_key, which reports physical keys; control characters (Enter, Backspace, Tab, Escape) are not text and arrive only through on_key. Set to None to remove the handler.{% endraw %} |
 | `opacity` | {% raw %}Scene opacity (0.0-1.0). Applied to all UI elements during rendering.{% endraw %} |
 | `pos` | {% raw %}Scene position offset (Vector). Applied to all UI elements during rendering.{% endraw %} |
 | `registered` | {% raw %}Whether this scene is registered with the game engine (bool, read-only). Unregistered scenes still exist but won't receive lifecycle callbacks.{% endraw %} |
