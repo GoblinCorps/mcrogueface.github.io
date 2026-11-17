@@ -407,11 +407,14 @@ def check_against_base(base_text, cur_text):
     for b, c in zip(bf, cf):
         mk = c["marked"]
         if mk is None:
-            continue
+            continue                     # unmarked now: every byte, marker lines included, is compared
         drop_b.update(range(b["open"] + 1, b["close"]))            # body lines (1-based)
         drop_c.update(range(c["open"] + 1, c["close"]))
-        drop_c.add(mk.marker_line)
-        drop_c.add(c["close"] + 1)
+        if b["marked"] is None:
+            drop_c.add(mk.marker_line)   # newly marked: its marker lines are the allowed addition
+            drop_c.add(c["close"] + 1)
+        # marked at base too: the marker lines stay in the comparison, so retargeting or
+        # removing a marker is a change, and base and current stay aligned
     keep_b = [(i, l) for i, l in enumerate(blines, start=1) if i not in drop_b]
     keep_c = [(i, l) for i, l in enumerate(clines, start=1) if i not in drop_c]
     for (bi, bl), (ci, cl) in zip(keep_b, keep_c):

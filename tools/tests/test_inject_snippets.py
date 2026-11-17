@@ -414,6 +414,73 @@ class BaseMode(Base):
             self.run_tool(True, base="no-such-rev")
 
 
+class BaseModeAlreadyMarked(Base):
+    """The base page already carries markers (the situation after the first page batch)."""
+    def setUp(self):
+        super().setUp()
+        self.text = ("# T\n\nIntro.\n\n" + fence("old") + "\nMiddle.\n\n```python\nunconverted = 1\n```\n\nEnd.\n")
+        self.page("p.md", self.text, ratchet=1)
+        self.assertEqual(self.run_tool(False)[0], 0)
+        self.commit_site()
+
+    def base(self):
+        return self.run_tool(True, base="HEAD")
+
+    def edit_page(self, fn):
+        path = self.site / "cookbook" / "p.md"
+        path.write_text(fn(path.read_text()))
+
+    def test_unchanged_marked_page_passes(self):
+        code, out = self.base()
+        self.assertEqual(code, 0, out)
+
+    def test_engine_snippet_change_alone_passes(self):
+        (self.engine / "tests" / "snippets" / "007_demo.py").write_text(SNIP + "extra = 1\n")
+        self.assertEqual(self.run_tool(False)[0], 0)           # re-inject
+        self.assertIn("extra = 1", self.read("p.md"))
+        code, out = self.base()
+        self.assertEqual(code, 0, out)
+
+    def test_prose_change_fails(self):
+        self.edit_page(lambda t: t.replace("Middle.", "Middle!"))
+        code, out = self.base()
+        self.assertEqual(code, 1)
+        self.assertIn("text outside marked fences changed", out)
+
+    def test_prose_change_fails_even_with_a_legit_reinjection(self):
+        (self.engine / "tests" / "snippets" / "007_demo.py").write_text(SNIP + "extra = 1\n")
+        self.run_tool(False)
+        self.edit_page(lambda t: t.replace("Intro.", "Intro!"))
+        self.assertEqual(self.base()[0], 1)
+
+    def test_untagging_a_marked_fence_fails(self):
+        self.edit_page(lambda t: t.replace("<!-- snippet: 007_demo -->\n", "").replace("<!-- /snippet -->\n", ""))
+        self.assertEqual(self.base()[0], 1)
+
+    def test_turning_a_marked_fence_bare_fails(self):
+        self.edit_page(lambda t: t.replace("```python\n# Title", "```\n# Title", 1))
+        self.assertEqual(self.base()[0], 1)
+
+    def test_deleting_a_marked_fence_fails(self):
+        def drop(t):
+            a = t.index("<!-- snippet: 007_demo -->")
+            e = "<!-- /snippet -->\n"
+            return t[:a] + t[t.index(e) + len(e):]
+        self.edit_page(drop)
+        self.assertEqual(self.base()[0], 1)
+
+    def test_retargeting_a_marker_fails(self):
+        self.edit_page(lambda t: t.replace("snippet: 007_demo -->", "snippet: 007_demo region=helper -->"))
+        self.assertEqual(self.base()[0], 1)
+
+    def test_newly_marking_the_other_fence_still_passes(self):
+        self.edit_page(lambda t: t.replace("```python\nunconverted = 1\n```\n", fence("x")))
+        I.RATCHET_PATH.write_text(json.dumps({"cookbook/p.md": 0}))
+        self.assertEqual(self.run_tool(False)[0], 0)
+        code, out = self.base()
+        self.assertEqual(code, 0, out)
+
+
 class Guards(Base):
     def test_cr_in_a_page_is_an_error_not_normalised_away(self):
         (self.site / "cookbook").mkdir(exist_ok=True)
