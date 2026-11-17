@@ -33,6 +33,7 @@ This recipe creates classic roguelike dungeons with:
 
 > **Note:** This Quick Start is an illustrative sketch. `rooms_overlap()`, `carve_room()`, and `connect_rooms()` are pseudocode placeholders -- see the fully-worked equivalents (`Room.intersects`, `DungeonGenerator._carve_room`, `DungeonGenerator._dig_corridor`) in the Complete Generator section below.
 
+<!-- snippet: 374_grid_dungeon_generator_2 region=quickstart -->
 ```python
 import mcrfpy
 import random
@@ -75,6 +76,7 @@ def generate_dungeon(grid, room_count=8):
 
     return rooms
 ```
+<!-- /snippet -->
 
 > **Note:** `point.tilesprite` is a legacy attribute. For visuals, prefer routing tile rendering through a `TileLayer` (e.g. `layer.set((x, y), TILE_FLOOR)`), while `walkable`/`transparent` remain set directly on `grid.at(x, y)`.
 
@@ -84,6 +86,7 @@ def generate_dungeon(grid, room_count=8):
 
 A helper class for room management:
 
+<!-- snippet: 163_grid_dungeon_generator region=room -->
 ```python
 class Room:
     """Represents a rectangular room in the dungeon."""
@@ -119,11 +122,13 @@ class Room:
             self.y + self.height + padding > other.y - padding
         )
 ```
+<!-- /snippet -->
 
 ---
 
 ## Complete Generator
 
+<!-- snippet: 375_grid_dungeon_generator_3 region=generator -->
 ```python
 import mcrfpy
 import random
@@ -265,11 +270,13 @@ class DungeonGenerator:
                     floors.append((x, y))
         return random.choice(floors) if floors else None
 ```
+<!-- /snippet -->
 
 ---
 
 ## Usage Example
 
+<!-- snippet: 375_grid_dungeon_generator_3 region=usage -->
 ```python
 import mcrfpy
 
@@ -277,7 +284,7 @@ import mcrfpy
 scene = mcrfpy.Scene("dungeon")
 mcrfpy.current_scene = scene
 
-texture = mcrfpy.Texture("assets/dungeon.png", 16, 16)
+texture = mcrfpy.default_texture
 grid = mcrfpy.Grid(grid_size=(60, 40), texture=texture, pos=(0, 0), size=(960, 640))
 scene.children.append(grid)
 
@@ -302,6 +309,7 @@ grid.center_camera(spawn)
 
 print(f"Generated dungeon with {len(rooms)} rooms")
 ```
+<!-- /snippet -->
 
 ---
 
@@ -311,6 +319,7 @@ Binary Space Partitioning creates more structured layouts:
 
 > **Note:** `mcrfpy.BSP` provides native binary space partitioning built into the engine. The hand-rolled `BSPNode` class below remains here as an illustration of the algorithm. Like the Quick Start above, `create_rooms()` calls `connect_points()` and `carve_room(grid, self.room)` as pseudocode placeholders (not defined on this page) -- a runnable version would substitute the equivalent `DungeonGenerator._dig_corridor` / `DungeonGenerator._carve_room` methods from the Complete Generator section. Note the placeholder `carve_room` here takes `(grid, room)` while the Quick Start's placeholder takes `(grid, x, y, w, h)`; these are two independent illustrative sketches with different signatures, not the same function.
 
+<!-- snippet: 376_grid_dungeon_generator_4 region=bsp -->
 ```python
 class BSPNode:
     """Node in a BSP tree for dungeon generation."""
@@ -429,6 +438,7 @@ def generate_bsp_dungeon(grid, iterations=4):
     collect_rooms(root)
     return rooms
 ```
+<!-- /snippet -->
 
 ---
 

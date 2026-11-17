@@ -35,6 +35,7 @@ moving) the next call returns a rebuilt map; there is nothing to invalidate by h
 
 ## Quick Start
 
+<!-- snippet: 372_grid_dijkstra_3 region=quickstart -->
 ```python
 import mcrfpy
 
@@ -52,6 +53,7 @@ step = dijkstra.step_from((start_x, start_y))
 # Get the full path from any cell to the root
 path = dijkstra.path_from((start_x, start_y))
 ```
+<!-- /snippet -->
 
 ---
 
@@ -59,18 +61,16 @@ path = dijkstra.path_from((start_x, start_y))
 
 Use Dijkstra for enemy movement:
 
+<!-- snippet: 159_grid_dijkstra_1 region=move_enemy -->
 ```python
 def move_enemy_toward_player(grid, enemy, player):
     """Move enemy one step toward the player."""
-    # Distance map rooted at the player's current position
     dijkstra = grid.get_dijkstra_map(player.grid_pos)
-
-    # Single step from the enemy toward the root (the player)
     step = dijkstra.step_from(enemy.grid_pos)
-
     if step is not None:
         enemy.grid_pos = step
 ```
+<!-- /snippet -->
 
 ---
 
@@ -80,6 +80,7 @@ def move_enemy_toward_player(grid, enemy, player):
 
 Descend the distance field toward the root:
 
+<!-- snippet: 372_grid_dijkstra_3 region=chase -->
 ```python
 def ai_chase(grid, entity, target_x, target_y):
     """Move entity toward target using a Dijkstra map."""
@@ -92,23 +93,24 @@ def ai_chase(grid, entity, target_x, target_y):
     if step is not None:
         entity.grid_pos = step
 ```
+<!-- /snippet -->
 
 ### Flee Behavior
 
 `DijkstraMap.invert()` returns a new map with the distance field flipped, so
 descending it moves *away* from the original root:
 
+<!-- snippet: 160_grid_dijkstra_2 region=flee -->
 ```python
 def ai_flee(grid, entity, threat_x, threat_y):
     """Move entity away from threat using an inverted Dijkstra map."""
     toward_threat = grid.get_dijkstra_map((threat_x, threat_y))
     away_from_threat = toward_threat.invert()
-
     step = away_from_threat.descent_step(entity.grid_pos)
-
     if step is not None:
         entity.grid_pos = step
 ```
+<!-- /snippet -->
 
 ---
 
@@ -118,6 +120,7 @@ Pass several roots at once with the `roots` keyword — multi-source maps are
 combined by the engine (each cell's distance is to its *nearest* root) and are
 not cached, since the source set can change every call:
 
+<!-- snippet: 372_grid_dijkstra_3 region=multi -->
 ```python
 def get_distance_to_nearest(grid, positions, cell):
     """Distance from cell to the nearest of several source positions."""
@@ -135,11 +138,13 @@ def ai_flee_group(grid, entity, threats):
     if step is not None:
         entity.grid_pos = step
 ```
+<!-- /snippet -->
 
 For AI that weighs several competing goals (chase the player, avoid allies,
 seek healing), compute one map per goal and combine their `distance()` values
 yourself:
 
+<!-- snippet: 372_grid_dijkstra_3 region=manager -->
 ```python
 class DijkstraManager:
     """Cache several named Dijkstra maps for weighted AI decisions."""
@@ -204,6 +209,7 @@ def ai_decision(grid, manager, enemy):
     if best_move:
         enemy.grid_pos = best_move
 ```
+<!-- /snippet -->
 
 ---
 
@@ -211,6 +217,7 @@ def ai_decision(grid, manager, enemy):
 
 Use `DijkstraMap.distance()` for tactical movement:
 
+<!-- snippet: 372_grid_dijkstra_3 region=range -->
 ```python
 def get_reachable_cells(grid, start_x, start_y, max_cost):
     """Get all cells reachable within a movement budget."""
@@ -238,6 +245,7 @@ def show_movement_range(grid, highlight_layer, entity, movement_points):
         color = mcrfpy.Color(50, 50 + intensity, 255, 100)
         highlight_layer.set((x, y), color)
 ```
+<!-- /snippet -->
 
 `distance()` returns `None` for unreachable cells, so treat `None` the way the
 old code treated `float('inf')`.
@@ -249,6 +257,7 @@ old code treated `float('inf')`.
 Visualize tactical influence by summing several Dijkstra maps' inverse-distance
 contributions:
 
+<!-- snippet: 372_grid_dijkstra_3 region=influence -->
 ```python
 def compute_influence_map(grid, player_team, enemy_team):
     """Show which team controls which areas."""
@@ -287,6 +296,7 @@ def show_influence_map(influence_layer, influence):
             alpha = min(150, int(abs(val) * 50))
             influence_layer.set((x, y), mcrfpy.Color(200, 50, 50, alpha))
 ```
+<!-- /snippet -->
 
 ---
 
@@ -296,10 +306,12 @@ def show_influence_map(influence_layer, influence):
 `1.41`) for the relative cost of diagonal moves, and a `collide` label string
 so entities carrying that label block the path:
 
+<!-- snippet: 372_grid_dijkstra_3 region=cost -->
 ```python
 # Cheaper diagonal movement, and block on any entity labeled "blocker"
 dijkstra = grid.get_dijkstra_map(player.grid_pos, diagonal_cost=1.0, collide="blocker")
 ```
+<!-- /snippet -->
 
 There is currently no per-cell weighted movement cost in the 2D grid API —
 `GridPoint.walkable` is a binary flag. To model "slow" terrain (mud, water),
@@ -316,6 +328,7 @@ Only path through cells an entity has actually discovered. Per-entity
 discovery state lives in `entity.perspective_map`, a `DiscreteMap` where
 `0` = unknown, `1` = discovered, `2` = currently visible:
 
+<!-- snippet: 372_grid_dijkstra_3 region=visibility -->
 ```python
 def compute_safe_dijkstra(grid, player, goal_pos):
     """Compute a distance map that avoids cells the player hasn't discovered."""
@@ -337,6 +350,7 @@ def compute_safe_dijkstra(grid, player, goal_pos):
 
     return dijkstra
 ```
+<!-- /snippet -->
 
 `entity.perspective_map` is only kept current by calling
 `entity.updateVisibility()` after the entity moves or the map changes.
@@ -356,6 +370,7 @@ whole grid, up to 511). Entities outside the field still get a greedy step from
 `step_from()`, and `dijkstra.is_exact(pos)` tells you whether `distance(pos)` is exact
 or the heuristic's estimate:
 
+<!-- snippet: 372_grid_dijkstra_3 region=radius -->
 ```python
 dijkstra = grid.get_dijkstra_map(player.grid_pos, radius=64)
 for enemy in enemies:
@@ -363,6 +378,7 @@ for enemy in enemies:
         continue  # far away: let it idle, or take the greedy step_from()
     step = dijkstra.step_from(enemy.grid_pos)
 ```
+<!-- /snippet -->
 
 The cache bounds its own memory: maps are capped at `grid.dijkstra_cache_budget`
 bytes (default 256 MiB; each map costs 4 bytes per cell), least recently used
