@@ -20,6 +20,7 @@ to get a color flash is a **`ColorLayer`** overlay on the grid, faded out manual
 
 ## Quick Example
 
+<!-- snippet: 137_effects_damage_flash_1 -->
 ```python
 import mcrfpy
 
@@ -61,12 +62,14 @@ player = mcrfpy.Entity(grid_pos=(8, 6), texture=mcrfpy.default_texture)
 grid.entities.append(player)
 damage_flash(player)
 ```
+<!-- /snippet -->
 
 ## Grid Cell Flash with ColorLayer
 
 The pattern above generalizes to any cell, not just an entity's current position — handy
 for AoE spells, traps, or telegraphed attacks:
 
+<!-- snippet: 312_effects_damage_flash_4 region=cell_flash -->
 ```python
 import mcrfpy
 
@@ -96,6 +99,7 @@ def damage_at_position(grid, color_layer, x, y, duration=0.3):
 # Usage when entity takes damage
 damage_at_position(grid, color_layer, enemy.cell_x, enemy.cell_y)
 ```
+<!-- /snippet -->
 
 `ColorLayer.at(x, y)` returns a plain `Color` value (a snapshot, not a live handle) — you
 can't mutate a cell in place by grabbing it and changing its fields. Always write a new
@@ -105,8 +109,19 @@ can't mutate a cell in place by grabbing it and changing its fields. Always writ
 
 A reusable damage flash system with multiple flash types:
 
+<!-- snippet: 138_effects_damage_flash_2 -->
 ```python
 import mcrfpy
+
+scene = mcrfpy.Scene("demo")
+mcrfpy.current_scene = scene
+
+grid = mcrfpy.Grid(grid_size=(16, 12), pos=(0, 0), size=(640, 480))
+scene.children.append(grid)
+
+for y in range(12):
+    for x in range(16):
+        grid.at(x, y).tilesprite = 48
 
 class DamageEffects:
     """Manages visual damage feedback effects."""
@@ -180,12 +195,18 @@ class DamageEffects:
 # Setup
 effects = DamageEffects(grid)
 
+player = mcrfpy.Entity(grid_pos=(5, 5), texture=mcrfpy.default_texture)
+grid.entities.append(player)
+enemy = mcrfpy.Entity(grid_pos=(9, 5), texture=mcrfpy.default_texture)
+grid.entities.append(enemy)
+
 # Usage examples
 effects.damage(player, 10)           # Red flash
 effects.heal(player, 5)              # Green flash
 effects.poison(enemy)                # Purple flash
 effects.area_damage(5, 5, 3, effects.FIRE_ORANGE)  # Area effect
 ```
+<!-- /snippet -->
 
 Each `flash_cell()` call creates a `Timer` named `flash_<x>_<y>`. Since a `Timer` with a
 name that already exists replaces the old one, overlapping flashes on the *same* cell will
@@ -196,8 +217,22 @@ worth knowing if you see a flash cut short.
 
 For more dramatic hits, flash a cell multiple times in succession:
 
+<!-- snippet: 139_effects_damage_flash_3 -->
 ```python
 import mcrfpy
+
+scene = mcrfpy.Scene("demo")
+mcrfpy.current_scene = scene
+
+grid = mcrfpy.Grid(grid_size=(16, 12), pos=(0, 0), size=(640, 480))
+scene.children.append(grid)
+
+for y in range(12):
+    for x in range(16):
+        grid.at(x, y).tilesprite = 48
+
+color_layer = mcrfpy.ColorLayer(z_index=1, name="flash")
+grid.add_layer(color_layer)
 
 def multi_flash(grid, color_layer, x, y, color, flashes=3, flash_duration=0.1):
     """Flash a cell multiple times for emphasis."""
@@ -214,9 +249,13 @@ def multi_flash(grid, color_layer, x, y, color, flashes=3, flash_duration=0.1):
         mcrfpy.Timer(f"multiflash_{x}_{y}_{i}", do_flash, max(1, int(delay * 1000)), once=True)
         delay += flash_duration * 1.5  # Gap between flashes
 
+enemy = mcrfpy.Entity(grid_pos=(9, 5), texture=mcrfpy.default_texture)
+grid.entities.append(enemy)
+
 # Usage for critical hit
 multi_flash(grid, color_layer, enemy.cell_x, enemy.cell_y, (255, 255, 0), flashes=3)
 ```
+<!-- /snippet -->
 
 ## Key Concepts
 

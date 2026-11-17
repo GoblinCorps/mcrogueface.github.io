@@ -19,6 +19,7 @@ Turn-based games require careful management of game state to ensure actors take 
 
 ## Basic Turn Manager
 
+<!-- snippet: 314_combat_turn_system_1 region=turn_manager -->
 ```python
 import mcrfpy
 
@@ -69,11 +70,13 @@ class TurnManager:
         """Check if it's the player's turn."""
         return self.current_actor() == player
 ```
+<!-- /snippet -->
 
 ## Energy-Based System
 
 For more complex games, use an energy system where faster actors get more frequent turns:
 
+<!-- snippet: 314_combat_turn_system_1 region=energy_manager -->
 ```python
 class EnergyTurnManager:
     """Turn manager using energy accumulation for speed differences."""
@@ -128,9 +131,11 @@ class EnergyTurnManager:
                 return actor
         return None
 ```
+<!-- /snippet -->
 
 ## Complete Game Loop Example
 
+<!-- snippet: 314_combat_turn_system_1 region=game_loop -->
 ```python
 import mcrfpy
 
@@ -250,11 +255,13 @@ def handle_player_input(key, action):
 
 scene.on_key = handle_player_input
 ```
+<!-- /snippet -->
 
 ## Turn Display UI
 
 Show the turn order to the player:
 
+<!-- snippet: 314_combat_turn_system_1 region=turn_order_ui -->
 ```python
 def create_turn_order_ui(scene, turn_manager, x=800, y=50):
     """Create a visual turn order display."""
@@ -290,6 +297,7 @@ def update_turn_order_display(scene, frame, turn_manager, x=800, y=50):
         caption.fill_color = color
         scene.children.append(caption)
 ```
+<!-- /snippet -->
 
 ## Tips
 
@@ -303,10 +311,12 @@ def update_turn_order_display(scene, frame, turn_manager, x=800, y=50):
    - Slow enemies: 50-80 (player acts more often)
 
 4. **Initiative Rolls**: For variety, add randomness to speed at combat start:
+   <!-- snippet: 314_combat_turn_system_1 region=tip_initiative -->
    ```python
    import random
    speed = base_speed + random.randint(-10, 10)
    ```
+   <!-- /snippet -->
 
 5. **Reaction System**: For counter-attacks or interrupts, check conditions before finalizing turn end
 
