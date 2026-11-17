@@ -90,6 +90,7 @@ animator.start()
 
 Animate `draw_pos` straight to each waypoint, and both axes move together:
 
+<!-- snippet: 343_effects_path_animation_2 region=diagonal -->
 ```python
 import mcrfpy
 
@@ -143,11 +144,13 @@ path = [(2, 2), (5, 5), (8, 2), (5, 5)]  # Diamond pattern
 animator = DiagonalPathAnimator(entity, path, step_duration=0.4)
 animator.start()
 ```
+<!-- /snippet -->
 
 ## Looping Patrol Route
 
 Create an enemy that continuously patrols a route:
 
+<!-- snippet: 344_effects_path_animation_3 region=patrol -->
 ```python
 import mcrfpy
 
@@ -216,11 +219,13 @@ guard.start()
 # Later, to stop:
 # guard.stop()
 ```
+<!-- /snippet -->
 
 ## Path with Variable Speeds
 
 Different speeds for different path segments:
 
+<!-- snippet: 345_effects_path_animation_4 region=variable-speed -->
 ```python
 import mcrfpy
 
@@ -281,11 +286,13 @@ waypoints = [
 path = VariableSpeedPath(entity, waypoints)
 path.start()
 ```
+<!-- /snippet -->
 
 ## Pathfinding Integration
 
 Use with McRogueFace's built-in pathfinding:
 
+<!-- snippet: 346_effects_path_animation_5 region=pathfinding -->
 ```python
 import mcrfpy
 
@@ -324,11 +331,13 @@ animator = animate_to_target(player, grid, 15, 10)
 if animator:
     animator.on_complete = lambda a: print("Arrived at destination!")
 ```
+<!-- /snippet -->
 
 ## Camera Following Path
 
 Animate camera to follow the entity along the path:
 
+<!-- snippet: 347_effects_path_animation_6 region=camera -->
 ```python
 import mcrfpy
 
@@ -379,6 +388,7 @@ mover = CameraFollowingPath(player, grid, path)
 mover.on_complete = lambda m: print("Journey complete!")
 mover.start()
 ```
+<!-- /snippet -->
 
 ## Key Concepts
 

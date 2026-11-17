@@ -29,8 +29,21 @@ Cell highlighting is essential for:
 
 ## Quick Start
 
+<!-- snippet: 157_grid_cell_highlighting_1 -->
 ```python
 import mcrfpy
+
+scene = mcrfpy.Scene("demo")
+mcrfpy.current_scene = scene
+
+grid = mcrfpy.Grid(
+    grid_size=(16, 12),
+    texture=mcrfpy.default_texture,
+    pos=(0, 0),
+    size=(1024, 768),
+    zoom=4.0
+)
+scene.children.append(grid)
 
 # Create a highlight layer (above tiles, below entities)
 highlight_layer = mcrfpy.ColorLayer(name="highlight", z_index=1)
@@ -45,7 +58,10 @@ def highlight_cells(cells, color):
 def clear_highlights():
     """Remove all highlighting."""
     highlight_layer.fill(mcrfpy.Color(0, 0, 0, 0))
+
+highlight_cells([(1, 1), (2, 1), (3, 1)], mcrfpy.Color(50, 100, 255, 100))
 ```
+<!-- /snippet -->
 
 ---
 
@@ -53,6 +69,7 @@ def clear_highlights():
 
 Show where the player can move:
 
+<!-- snippet: 350_grid_cell_highlighting_3 region=movement-range -->
 ```python
 def get_movement_range(start_x, start_y, max_distance):
     """Get all reachable cells within movement range."""
@@ -92,6 +109,7 @@ def show_movement_range():
     # Blue highlight for movement
     highlight_cells(reachable, mcrfpy.Color(50, 100, 255, 100))
 ```
+<!-- /snippet -->
 
 ---
 
@@ -99,6 +117,7 @@ def show_movement_range():
 
 Different range patterns for attacks:
 
+<!-- snippet: 351_grid_cell_highlighting_4 region=attack-range -->
 ```python
 def get_line_range(start_x, start_y, max_range):
     """Get cells in cardinal directions (ranged attack)."""
@@ -169,6 +188,7 @@ def get_cone_range(origin_x, origin_y, direction, length, spread):
 
     return cells
 ```
+<!-- /snippet -->
 
 ---
 
@@ -176,6 +196,7 @@ def get_cone_range(origin_x, origin_y, direction, length, spread):
 
 Layer different highlight types:
 
+<!-- snippet: 352_grid_cell_highlighting_5 region=multi-color -->
 ```python
 class HighlightManager:
     """Manage multiple highlight layers."""
@@ -257,6 +278,7 @@ def on_cell_hover(x, y):
             aoe = get_radius_range(x, y, 2, include_center=True)
             highlights.add('danger', aoe)
 ```
+<!-- /snippet -->
 
 ---
 
@@ -264,6 +286,7 @@ def on_cell_hover(x, y):
 
 Show the path the player will take:
 
+<!-- snippet: 353_grid_cell_highlighting_6 region=path-preview -->
 ```python
 def show_path_preview(start, end):
     """Highlight the path between two points."""
@@ -280,6 +303,7 @@ def hide_path_preview():
     highlights.remove('path')
     highlights.remove('select')
 ```
+<!-- /snippet -->
 
 ---
 
@@ -287,6 +311,7 @@ def hide_path_preview():
 
 Pulsing highlights for attention:
 
+<!-- snippet: 354_grid_cell_highlighting_7 region=animated -->
 ```python
 class AnimatedHighlight:
     """Highlights that pulse or animate."""
@@ -337,6 +362,7 @@ def game_update(timer, runtime):
 
 mcrfpy.Timer("highlight_anim", game_update, 16)
 ```
+<!-- /snippet -->
 
 ---
 
@@ -344,6 +370,7 @@ mcrfpy.Timer("highlight_anim", game_update, 16)
 
 Complete targeting workflow:
 
+<!-- snippet: 355_grid_cell_highlighting_8 region=targeting -->
 ```python
 class TargetingSystem:
     """Handle ability targeting with visual feedback."""
@@ -411,6 +438,7 @@ class TargetingSystem:
         self.valid_targets = set()
         self.highlights.clear()
 ```
+<!-- /snippet -->
 
 ---
 

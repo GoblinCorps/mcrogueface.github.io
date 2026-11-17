@@ -38,6 +38,7 @@ Cell positions arrive as `Vector` objects. Use `int(cell_pos.x)`, `int(cell_pos.
 
 Most grid interaction patterns fit into this structure:
 
+<!-- snippet: 150_grid_interaction_patterns_1 -->
 ```python
 import mcrfpy
 
@@ -74,6 +75,7 @@ grid.entities.append(player)
 
 mcrfpy.current_scene = scene
 ```
+<!-- /snippet -->
 
 ---
 
@@ -81,6 +83,7 @@ mcrfpy.current_scene = scene
 
 Show which cell the mouse is over using a ColorLayer.
 
+<!-- snippet: 151_grid_interaction_patterns_2 region=hover -->
 ```python
 current_highlight = [None]
 
@@ -97,6 +100,7 @@ def on_cell_exit(cell_pos):
 grid.on_cell_enter = on_cell_enter
 grid.on_cell_exit = on_cell_exit
 ```
+<!-- /snippet -->
 
 ---
 
@@ -104,7 +108,11 @@ grid.on_cell_exit = on_cell_exit
 
 Respond to clicks on specific cells. Callbacks receive `(cell_pos, button, action)`.
 
+<!-- snippet: 152_grid_interaction_patterns_3 region=click -->
 ```python
+def show_cell_info(x, y, point):
+    print(f"Cell ({x}, {y}): walkable={point.walkable}")
+
 def on_cell_click(cell_pos, button, action):
     x, y = int(cell_pos.x), int(cell_pos.y)
     point = grid.at(x, y)
@@ -115,8 +123,7 @@ def on_cell_click(cell_pos, button, action):
             player.grid_y = y
 
     elif button == mcrfpy.MouseButton.RIGHT and action == mcrfpy.InputState.PRESSED:
-        # Inspect cell (define show_cell_info to update your own UI, e.g. the
-        # Tile Inspector Panel pattern below)
+        # Inspect cell
         show_cell_info(x, y, point)
 
     elif button == mcrfpy.MouseButton.MIDDLE and action == mcrfpy.InputState.PRESSED:
@@ -125,6 +132,7 @@ def on_cell_click(cell_pos, button, action):
 
 grid.on_cell_click = on_cell_click
 ```
+<!-- /snippet -->
 
 ---
 
@@ -132,6 +140,7 @@ grid.on_cell_click = on_cell_click
 
 Use `scene.on_key` with Key enums for movement.
 
+<!-- snippet: 153_grid_interaction_patterns_4 region=wasd -->
 ```python
 move_map = {
     mcrfpy.Key.W: (0, -1),
@@ -156,6 +165,7 @@ def handle_key(key, action):
 
 scene.on_key = handle_key
 ```
+<!-- /snippet -->
 
 `grid.at(x, y)` raises `IndexError` for out-of-range coordinates rather than returning `None`, so bounds-check against `grid.grid_size` before calling it.
 
@@ -163,6 +173,7 @@ scene.on_key = handle_key
 
 For visual smoothness, animate the entity's draw position, `draw_pos`, in tiles:
 
+<!-- snippet: 349_grid_interaction_patterns_8 region=smooth -->
 ```python
 def handle_key(key, action):
     if action != mcrfpy.InputState.PRESSED:
@@ -181,6 +192,7 @@ def handle_key(key, action):
 
 scene.on_key = handle_key
 ```
+<!-- /snippet -->
 
 `draw_pos` interpolates the sprite smoothly while `grid_x`/`grid_y` update the logical cell immediately. An entity's `x`, `y` and `pos` are pixels, and animate in pixels. (Before 0.3.0, `animate("x", ...)` on an entity took tile units, and `"draw_x"`/`"draw_y"` were accepted; those names now raise `ValueError` pointing at `"draw_pos"`.)
 
@@ -190,6 +202,7 @@ scene.on_key = handle_key
 
 Click to select entities using a ColorLayer overlay.
 
+<!-- snippet: 155_grid_interaction_patterns_6 region=selection -->
 ```python
 selected = [None]
 
@@ -216,6 +229,7 @@ def on_cell_click(cell_pos, button, action):
 
 grid.on_cell_click = on_cell_click
 ```
+<!-- /snippet -->
 
 ---
 
@@ -223,6 +237,7 @@ grid.on_cell_click = on_cell_click
 
 Show pathfinding path on hover using a ColorLayer.
 
+<!-- snippet: 156_grid_interaction_patterns_7 region=path-preview -->
 ```python
 current_path_cells = []
 
@@ -256,6 +271,7 @@ def on_cell_enter(cell_pos):
 
 grid.on_cell_enter = on_cell_enter
 ```
+<!-- /snippet -->
 
 ---
 
@@ -263,8 +279,8 @@ grid.on_cell_enter = on_cell_enter
 
 Click a cell to show information in a side panel.
 
+<!-- snippet: 154_grid_interaction_patterns_5 region=inspector -->
 ```python
-# Create inspector UI
 inspector = mcrfpy.Frame(pos=(700, 50), size=(200, 150),
                           fill_color=mcrfpy.Color(30, 30, 40, 230))
 inspector.outline = 1
@@ -305,6 +321,7 @@ def on_cell_click(cell_pos, button, action):
 
 grid.on_cell_click = on_cell_click
 ```
+<!-- /snippet -->
 
 ---
 

@@ -15,6 +15,7 @@ Smooth transitions between scenes for a polished game feel. McRogueFace supports
 
 McRogueFace provides simple built-in scene transitions:
 
+<!-- snippet: 348_effects_scene_transitions_1 region=builtin -->
 ```python
 import mcrfpy
 
@@ -26,6 +27,7 @@ game_scene = mcrfpy.Scene("game")
 menu_scene.activate()
 game_scene.activate()
 ```
+<!-- /snippet -->
 
 ## Custom Fade Transition
 
@@ -172,8 +174,10 @@ flash_transition(game_scene, death_scene, color=(255, 0, 0), duration=0.8)   # R
 
 A frame that expands to cover the screen:
 
+<!-- snippet: 145_effects_scene_transitions_4 -->
 ```python
 import mcrfpy
+
 
 def wipe_transition(current_scene, target_scene, direction="right", duration=0.5, color=(0, 0, 0)):
     """
@@ -256,9 +260,13 @@ game_scene = mcrfpy.Scene("game")
 next_level = mcrfpy.Scene("next_level")
 menu_scene = mcrfpy.Scene("menu")
 
+mcrfpy.current_scene = game_scene
+game_scene.children.append(mcrfpy.Frame(pos=(0, 0), size=(1024, 768)))
+
 wipe_transition(game_scene, next_level, direction="right", duration=0.6)
 wipe_transition(game_scene, menu_scene, direction="down", duration=0.4)
 ```
+<!-- /snippet -->
 
 ## Transition Manager
 
