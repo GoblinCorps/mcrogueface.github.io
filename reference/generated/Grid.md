@@ -6,7 +6,7 @@ mcrf:
     - Grid
   diataxis: reference
   source: generated
-  verified: 0.3.4
+  verified: 0.3.5
   verified_commit: ""
 ---
 
@@ -122,7 +122,7 @@ Note:
     This is a convenience method that creates an Animation, starts it, and adds it to the AnimationManager.
 {% endraw %}
 
-### `center_camera(pos: tuple = None) -> None` {% include api_badge.html kind="added" version="0.2.8-dev" %}
+### `center_camera(pos: tuple = None) -> None` {% include api_badge.html kind="added" version="0.2.8-dev" %} {% include api_badge.html kind="changed" version="0.3.5-dev" %}
 
 {% raw %}center_camera(pos: tuple = None) -> None
 
@@ -133,6 +133,9 @@ Args:
 
 Note:
     The camera belongs to the VIEW, not the map: two views of one GridData pan independently.
+
+Note:
+    Until a camera is set, the default puts cell (0, 0) at the widget's top-left at the current zoom (setting zoom later keeps it so). Maps larger than the widget need this call to show anything but their corner.
 {% endraw %}
 
 ### `move(dx, dy) or (delta) -> None`

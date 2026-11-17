@@ -6,13 +6,13 @@ mcrf:
     - TextureWarning
   diataxis: reference
   source: generated
-  verified: 0.3.4
+  verified: 0.3.5
   verified_commit: ""
 ---
 
-# TextureWarning {% include api_badge.html kind="added" version="0.2.8-dev" %}
+# TextureWarning {% include api_badge.html kind="added" version="0.2.8-dev" %} {% include api_badge.html kind="changed" version="0.3.5-dev" %}
 
-{% raw %}Warns about the texture a grid draws with: drawn with no texture, so mcrfpy.default_texture was assigned. Silence with warnings.simplefilter('ignore', mcrfpy.TextureWarning).{% endraw %}
+{% raw %}Warns about the texture a grid draws with: drawn with no texture, so mcrfpy.default_texture was assigned; or a TileLayer was written a tile index above its texture's highest sprite index (it will not be rendered). Silence with warnings.simplefilter('ignore', mcrfpy.TextureWarning).{% endraw %}
 
 ## Properties
 

@@ -6,7 +6,7 @@ mcrf:
     - EngineConfig
   diataxis: reference
   source: generated
-  verified: 0.3.4
+  verified: 0.3.5
   verified_commit: ""
 ---
 
@@ -50,6 +50,4 @@ Example:
 | `screenshot_path` {% include api_badge.html kind="added" version="0.3.4-dev" %} | {% raw %}The --screenshot path, or None (str \| None, read-only).{% endraw %} |
 | `script_args` {% include api_badge.html kind="added" version="0.3.4-dev" %} | {% raw %}Arguments after the script, or after -- (tuple[str], read-only).{% endraw %} |
 | `script_path` {% include api_badge.html kind="added" version="0.3.4-dev" %} | {% raw %}The script named on the command line, or None (str \| None, read-only).{% endraw %} |
-| `use_virtual_env` {% include api_badge.html kind="added" version="0.3.4-dev" %} | {% raw %}True with --use-virtual-env: a packaged game honours VIRTUAL_ENV (bool, read-only).{% endraw %} |
-| `virtual_env` {% include api_badge.html kind="added" version="0.3.4-dev" %} | {% raw %}The VIRTUAL_ENV whose site-packages is on sys.path, or None (str \| None, read-only). See docs/sys-path-order.md.{% endraw %} |
-| `virtual_env_ignored` {% include api_badge.html kind="added" version="0.3.4-dev" %} | {% raw %}When VIRTUAL_ENV was set but not used, a (path, reason) pair of str: it is for another Python, or this is a packaged game without --use-virtual-env. Otherwise None (tuple \| None, read-only).{% endraw %} |
+| `virtual_env` {% include api_badge.html kind="added" version="0.3.4-dev" %} {% include api_badge.html kind="changed" version="0.3.5-dev" %} | {% raw %}The virtual environment this interpreter runs in (sys.prefix when it differs from sys.base_prefix), or None (str \| None, read-only). Found from the launch path, never from the VIRTUAL_ENV variable. See docs/sys-path-order.md.{% endraw %} |

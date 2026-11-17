@@ -6,13 +6,13 @@ mcrf:
     - ColorLayer
   diataxis: reference
   source: generated
-  verified: 0.3.4
+  verified: 0.3.5
   verified_commit: ""
 ---
 
-# ColorLayer
+# ColorLayer {% include api_badge.html kind="changed" version="0.3.5-dev" %}
 
-{% raw %}ColorLayer(z_index=-1, name=None, grid_size=None)
+{% raw %}ColorLayer(name=None, z_index=-1, grid_size=None, grid=None)
 
 A grid layer that stores RGBA colors per cell for background/overlay effects.
 
@@ -21,12 +21,14 @@ or passed to the Grid constructor's layers parameter. Layers with size (0, 0)
 automatically resize to match the Grid when attached.
 
 Args:
+    name (str): Layer name for Grid.layer(name) lookup. Default: None
     z_index (int): Render order relative to entities. Negative values render
         below entities (as backgrounds), positive values render above entities
         (as overlays). Default: -1 (background)
-    name (str): Layer name for Grid.layer(name) lookup. Default: None
     grid_size (tuple): Dimensions as (width, height). If None or (0, 0), the
         layer will auto-resize when attached to a Grid. Default: None
+    grid (Grid): If given, the layer is attached to it as if by grid.add_layer(layer)
+        at construction (a mcrfpy.Grid, else TypeError). Default: None
 
 Attributes:
     z_index (int): Layer z-order relative to entities (read/write)
@@ -36,18 +38,33 @@ Attributes:
     grid (Grid): Parent Grid or None. Setting manages layer association.
 
 Methods:
-    at(x, y) -> Color: Get the color at cell position (x, y)
-    set(x, y, color): Set the color at cell position (x, y)
+    at(pos) -> Color: Get the color at cell position pos (a tuple/Vector, or at(x, y))
+    set(pos, color): Set the color at cell position pos
     fill(color): Fill the entire layer with a single color
-    fill_rect(x, y, w, h, color): Fill a rectangular region with a color
-    draw_fov(...): Draw FOV-based visibility colors
-    apply_perspective(entity, ...): Bind layer to entity for automatic FOV updates
+    layer[x, y] -> Color: Get the color at cell (x, y); layer[x, y] = color sets it
+        (key must be a 2-tuple of ints)
+    fill_rect((x, y), (w, h), color): Fill the rectangle at (x, y) of size (w, h) with a color.
+        pos and size must be real tuples (a Vector or list raises TypeError)
+    edit(): Context manager yielding a writable (height, width, 4) uint8 view
+    draw_fov(source, radius=None, fov=None, visible=None, discovered=None, unknown=None):
+        Draw FOV-based visibility colors
+    apply_perspective(entity, visible=None, discovered=None, unknown=None): Bind layer
+        to entity for automatic FOV updates
+    update_perspective(): Redraw FOV from the bound entity's current position
+    clear_perspective(): Remove the perspective binding
+    apply_threshold(source, range, color) -> ColorLayer: Set color where the HeightMap
+        value is within (min, max)
+    apply_gradient(source, range, color_low, color_high) -> ColorLayer: Interpolate
+        between two colors by HeightMap value within (min, max)
+    apply_ranges(source, ranges) -> ColorLayer: Apply several ((min, max), color) or
+        ((min, max), (color_low, color_high)) specs from a HeightMap in one pass
 
 Example:
     fog = mcrfpy.ColorLayer(z_index=-1, name='fog')
     grid = mcrfpy.Grid(grid_size=(20, 15), layers=[fog])
     fog.fill(mcrfpy.Color(40, 40, 40))  # Dark gray background
-    grid.layer('fog').set(5, 5, mcrfpy.Color(255, 0, 0, 128)){% endraw %}
+    grid.layer('fog').set((5, 5), mcrfpy.Color(255, 0, 0, 128))
+    fog.fill_rect((2, 2), (4, 3), mcrfpy.Color(0, 0, 255, 128)){% endraw %}
 
 ## Properties
 
@@ -90,7 +107,7 @@ Args:
     unknown: Color for never-seen cells
 {% endraw %}
 
-### `apply_ranges(source: HeightMap, ranges: list) -> ColorLayer`
+### `apply_ranges(source: HeightMap, ranges: list) -> ColorLayer` {% include api_badge.html kind="changed" version="0.3.5-dev" %}
 
 {% raw %}apply_ranges(source: HeightMap, ranges: list) -> ColorLayer
 
@@ -98,7 +115,7 @@ Apply multiple color assignments from a HeightMap in a single pass. Later ranges
 
 Args:
     source: Source heightmap (must match layer dimensions)
-    ranges: List of range specs: ((min, max), color) for fixed or ((min, max), (color_low, color_high)) for gradient
+    ranges: List of range specs: ((min, max), color) for fixed or ((min, max), (color_low, color_high)) for gradient; colors may be Color objects, tuples or names
 
 Returns:
     self for method chaining

@@ -6,13 +6,13 @@ mcrf:
     - TileLayer
   diataxis: reference
   source: generated
-  verified: 0.3.4
+  verified: 0.3.5
   verified_commit: ""
 ---
 
-# TileLayer {% include api_badge.html kind="changed" version="0.2.8-dev" %}
+# TileLayer {% include api_badge.html kind="changed" version="0.3.5-dev" %}
 
-{% raw %}TileLayer(z_index=-1, name=None, texture=None, grid_size=None)
+{% raw %}TileLayer(name=None, z_index=-1, texture=None, grid_size=None, grid=None)
 
 A grid layer that stores sprite indices per cell for tile-based rendering.
 
@@ -21,15 +21,17 @@ or passed to the Grid constructor's layers parameter. Layers with size (0, 0)
 automatically resize to match the Grid when attached.
 
 Args:
+    name (str): Layer name for Grid.layer(name) lookup. Default: None
     z_index (int): Render order relative to entities. Negative values render
         below entities (as backgrounds), positive values render above entities
         (as overlays). Default: -1 (background)
-    name (str): Layer name for Grid.layer(name) lookup. Default: None
     texture (Texture): Sprite atlas containing tile images. Default: None,
         drawing with the grid's texture (looked up when drawn, so changing
         the grid's texture restyles this layer).
     grid_size (tuple): Dimensions as (width, height). If None or (0, 0), the
         layer will auto-resize when attached to a Grid. Default: None
+    grid (Grid): If given, the layer is attached to it as if by grid.add_layer(layer)
+        at construction (a mcrfpy.Grid, else TypeError). Default: None
 
 Attributes:
     z_index (int): Layer z-order relative to entities (read/write)
@@ -40,20 +42,29 @@ Attributes:
     grid (Grid): Parent Grid or None. Setting manages layer association.
 
 Methods:
-    at(x, y) -> int: Get the tile index at cell position (x, y)
-    set(x, y, index): Set the tile index at cell position (x, y)
+    at(pos) -> int: Get the tile index at cell position pos (a tuple/Vector, or at(x, y))
+    set(pos, index): Set the tile index at cell position pos
     fill(index): Fill the entire layer with a single tile index
-    fill_rect(x, y, w, h, index): Fill a rectangular region with a tile index
+    layer[x, y] -> int: Get the tile index at cell (x, y); layer[x, y] = index sets it
+        (key must be a 2-tuple of ints)
+    fill_rect((x, y), (w, h), index): Fill the rectangle at (x, y) of size (w, h) with a
+        tile index. pos and size must be real tuples (a Vector or list raises TypeError)
+    edit(): Context manager yielding a writable (height, width) int32 view of the tile indices
+    apply_threshold(source, range, tile) -> TileLayer: Set a tile where the HeightMap
+        value is within (min, max)
+    apply_ranges(source, ranges) -> TileLayer: Apply several ((min, max), tile_index)
+        specs from a HeightMap in one pass
 
 Tile Index Values:
     -1: No tile (transparent/empty cell)
     0+: Index into the texture's sprite atlas (row-major order)
 
 Example:
-    terrain = mcrfpy.TileLayer(z_index=-2, name='terrain', texture=tileset)
+    terrain = mcrfpy.TileLayer(z_index=-2, name='terrain', texture=mcrfpy.default_texture)
     grid = mcrfpy.Grid(grid_size=(20, 15), layers=[terrain])
     terrain.fill(0)  # Fill with tile index 0
-    grid.layer('terrain').set(5, 5, 42)  # Place tile 42 at (5, 5){% endraw %}
+    grid.layer('terrain').set((5, 5), 42)  # Place tile 42 at (5, 5)
+    terrain.fill_rect((2, 2), (4, 3), 7)  # 4x3 block of tile 7 from (2, 2){% endraw %}
 
 ## Properties
 
@@ -68,7 +79,7 @@ Example:
 
 ## Methods
 
-### `apply_ranges(source: HeightMap, ranges: list) -> TileLayer`
+### `apply_ranges(source: HeightMap, ranges: list) -> TileLayer` {% include api_badge.html kind="changed" version="0.3.5-dev" %}
 
 {% raw %}apply_ranges(source: HeightMap, ranges: list) -> TileLayer
 
@@ -82,10 +93,13 @@ Returns:
     self for method chaining
 
 Note:
+    Any int is stored. An index outside 0 to sprite_count-1 is not rendered (like -1); one above the highest sprite index of a known texture also warns (TextureWarning).
+
+Note:
     Cells not matching any range are left unchanged.
 {% endraw %}
 
-### `apply_threshold(source: HeightMap, range: tuple, tile: int) -> TileLayer`
+### `apply_threshold(source: HeightMap, range: tuple, tile: int) -> TileLayer` {% include api_badge.html kind="changed" version="0.3.5-dev" %}
 
 {% raw %}apply_threshold(source: HeightMap, range: tuple, tile: int) -> TileLayer
 
@@ -98,6 +112,9 @@ Args:
 
 Returns:
     self for method chaining
+
+Note:
+    Any int is stored. An index outside 0 to sprite_count-1 is not rendered (like -1); one above the highest sprite index of a known texture also warns (TextureWarning).
 {% endraw %}
 
 ### `at(pos: tuple | Vector) or (x: int, y: int) -> int`
@@ -129,7 +146,7 @@ Note:
 See also: Bulk-edit convention (#328) (docs/api-stability.md)
 {% endraw %}
 
-### `fill(index: int) -> None`
+### `fill(index: int) -> None` {% include api_badge.html kind="changed" version="0.3.5-dev" %}
 
 {% raw %}fill(index: int) -> None
 
@@ -137,9 +154,12 @@ Fill the entire layer with the specified tile index.
 
 Args:
     index: Tile index to fill with (-1 for no tile)
+
+Note:
+    Any int is stored. An index outside 0 to sprite_count-1 is not rendered (like -1); one above the highest sprite index of a known texture also warns (TextureWarning).
 {% endraw %}
 
-### `fill_rect(pos: tuple, size: tuple, index: int) -> None`
+### `fill_rect(pos: tuple, size: tuple, index: int) -> None` {% include api_badge.html kind="changed" version="0.3.5-dev" %}
 
 {% raw %}fill_rect(pos: tuple, size: tuple, index: int) -> None
 
@@ -149,9 +169,12 @@ Args:
     pos: Top-left corner as (x, y)
     size: Dimensions as (width, height)
     index: Tile index to fill with (-1 for no tile)
+
+Note:
+    Any int is stored. An index outside 0 to sprite_count-1 is not rendered (like -1); one above the highest sprite index of a known texture also warns (TextureWarning).
 {% endraw %}
 
-### `set(pos, index: int) -> None`
+### `set(pos, index: int) -> None` {% include api_badge.html kind="changed" version="0.3.5-dev" %}
 
 {% raw %}set(pos, index: int) -> None
 
@@ -163,4 +186,7 @@ Args:
 
 Raises:
     IndexError: If coordinates are out of bounds
+
+Note:
+    Any int is stored. An index outside 0 to sprite_count-1 is not rendered (like -1); one above the highest sprite index of a known texture also warns (TextureWarning).
 {% endraw %}

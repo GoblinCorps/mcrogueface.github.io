@@ -6,7 +6,7 @@ mcrf:
     - Key
   diataxis: reference
   source: generated
-  verified: 0.3.4
+  verified: 0.3.5
   verified_commit: ""
 ---
 
