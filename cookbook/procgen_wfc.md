@@ -38,26 +38,21 @@ WFC excels at generating coherent patterns where tiles must connect properly—r
 
 ## Quick Start
 
+<!-- snippet: 171_procgen_wfc region=wfc -->
 ```python
 import mcrfpy
 import random
-from collections import defaultdict
+
 
 class WFC:
     """Simple Wave Function Collapse for tile grids."""
 
     def __init__(self, grid, rules):
-        """
-        Args:
-            grid: McRogueFace Grid
-            rules: Dict mapping tile -> {direction: [allowed_neighbors]}
-        """
         self.grid = grid
         self.rules = rules
         self.width, self.height = int(grid.grid_size[0]), int(grid.grid_size[1])
         self.tiles = set(rules.keys())
 
-        # Initialize all cells with all possibilities
         self.possibilities = {}
         for y in range(self.height):
             for x in range(self.width):
@@ -66,7 +61,6 @@ class WFC:
     def collapse(self):
         """Run WFC until complete or contradiction."""
         while True:
-            # Find cell with lowest entropy (fewest possibilities)
             cell = self._lowest_entropy_cell()
             if cell is None:
                 return True  # All cells collapsed
@@ -77,27 +71,22 @@ class WFC:
             if not options:
                 return False  # Contradiction!
 
-            # Collapse: pick one possibility
             chosen = random.choice(list(options))
             self.possibilities[(x, y)] = {chosen}
 
-            # Set the tile
             self.grid.at((x, y)).tilesprite = chosen
 
-            # Propagate constraints
             if not self._propagate(x, y):
                 return False
 
         return True
 
     def _lowest_entropy_cell(self):
-        """Find uncollapsed cell with fewest possibilities."""
         best = None
         best_entropy = float('inf')
 
         for pos, options in self.possibilities.items():
-            if len(options) > 1:  # Not yet collapsed
-                # Add small random factor to break ties
+            if len(options) > 1:
                 entropy = len(options) + random.random() * 0.1
                 if entropy < best_entropy:
                     best_entropy = entropy
@@ -106,14 +95,12 @@ class WFC:
         return best
 
     def _propagate(self, start_x, start_y):
-        """Propagate constraints from collapsed cell."""
         stack = [(start_x, start_y)]
 
         directions = {
             'N': (0, -1), 'S': (0, 1),
             'E': (1, 0), 'W': (-1, 0)
         }
-        opposites = {'N': 'S', 'S': 'N', 'E': 'W', 'W': 'E'}
 
         while stack:
             x, y = stack.pop()
@@ -127,25 +114,24 @@ class WFC:
 
                 neighbor_options = self.possibilities[(nx, ny)]
                 if len(neighbor_options) == 1:
-                    continue  # Already collapsed
+                    continue
 
-                # What tiles can the neighbor be?
                 allowed = set()
                 for tile in current_options:
                     if dir_name in self.rules[tile]:
                         allowed.update(self.rules[tile][dir_name])
 
-                # Constrain neighbor
                 new_options = neighbor_options & allowed
                 if new_options != neighbor_options:
                     if not new_options:
-                        return False  # Contradiction
+                        return False
 
                     self.possibilities[(nx, ny)] = new_options
                     stack.append((nx, ny))
 
         return True
 ```
+<!-- /snippet -->
 
 ---
 
@@ -153,6 +139,7 @@ class WFC:
 
 Rules specify which tiles can be adjacent in each direction:
 
+<!-- snippet: 429_procgen_wfc_2 region=rules -->
 ```python
 # Simple path tiles
 # 0 = grass, 1 = path, 2 = water
@@ -178,6 +165,7 @@ rules = {
     }
 }
 ```
+<!-- /snippet -->
 
 ---
 
@@ -185,6 +173,7 @@ rules = {
 
 Generate coherent road patterns:
 
+<!-- snippet: 429_procgen_wfc_2 region=road -->
 ```python
 # Road tile indices
 GRASS = 0
@@ -237,6 +226,7 @@ wfc = WFC(grid, road_rules)
 success = wfc.collapse()
 print("Generation successful!" if success else "Contradiction occurred")
 ```
+<!-- /snippet -->
 
 ---
 
@@ -244,6 +234,7 @@ print("Generation successful!" if success else "Contradiction occurred")
 
 Generate proper wall configurations:
 
+<!-- snippet: 429_procgen_wfc_2 region=walls -->
 ```python
 # Wall tiles that connect correctly
 FLOOR = 0
@@ -280,6 +271,7 @@ wall_rules = {
     # ... similar rules for other edge/corner tiles
 }
 ```
+<!-- /snippet -->
 
 ---
 
@@ -287,6 +279,7 @@ wall_rules = {
 
 Force certain tiles in specific locations:
 
+<!-- snippet: 429_procgen_wfc_2 region=seed -->
 ```python
 def seed_wfc(wfc, constraints):
     """Pre-seed WFC with fixed tiles.
@@ -316,6 +309,7 @@ for pos in constraints:
 # Then collapse the rest
 wfc.collapse()
 ```
+<!-- /snippet -->
 
 ---
 
@@ -323,6 +317,7 @@ wfc.collapse()
 
 WFC can fail when constraints become impossible. Handle with retries:
 
+<!-- snippet: 429_procgen_wfc_2 region=retries -->
 ```python
 def generate_with_retries(grid, rules, max_attempts=10):
     """Generate with automatic retry on contradiction."""
@@ -379,6 +374,7 @@ class WFCBacktracking(WFC):
                 pos, old_poss, tried = history.pop()
                 self.possibilities[pos] = old_poss - tried
 ```
+<!-- /snippet -->
 
 ---
 
@@ -386,6 +382,7 @@ class WFCBacktracking(WFC):
 
 Make some tiles more common:
 
+<!-- snippet: 429_procgen_wfc_2 region=weighted -->
 ```python
 def collapse_weighted(self):
     """Collapse with weighted tile selection."""
@@ -424,11 +421,13 @@ def collapse_weighted(self):
 
     return self._propagate(x, y)
 ```
+<!-- /snippet -->
 
 ---
 
 ## Complete Example
 
+<!-- snippet: 436_procgen_wfc_3 region=complete -->
 ```python
 import mcrfpy
 import random
@@ -438,7 +437,7 @@ scene = mcrfpy.Scene("wfc_demo")
 scene.activate()
 mcrfpy.step(0.1)
 
-texture = mcrfpy.Texture("assets/terrain.png", 16, 16)  # or mcrfpy.default_texture
+texture = mcrfpy.Texture("assets/kenney_tinydungeon.png", 16, 16)  # or mcrfpy.default_texture
 grid = mcrfpy.Grid(grid_size=(30, 20), texture=texture,
                    pos=(0, 0), size=(480, 320))
 scene.children.append(grid)
@@ -481,6 +480,7 @@ for y in range(height):
         cell = grid.at((x, y))
         cell.walkable = cell.tilesprite != WATER
 ```
+<!-- /snippet -->
 
 ---
 
