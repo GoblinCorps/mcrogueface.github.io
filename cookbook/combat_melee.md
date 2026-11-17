@@ -19,6 +19,7 @@ This recipe covers the fundamentals of melee combat: tracking health, calculatin
 
 ## Basic Fighter Stats
 
+<!-- snippet: 287_combat_melee_1 region=fighter -->
 ```python
 from dataclasses import dataclass
 
@@ -43,9 +44,11 @@ class Fighter:
         self.hp -= actual
         return actual
 ```
+<!-- /snippet -->
 
 ## Basic Attack Resolution
 
+<!-- snippet: 287_combat_melee_1 region=attack -->
 ```python
 def attack(attacker: Fighter, defender: Fighter) -> dict:
     """
@@ -67,11 +70,13 @@ def attack(attacker: Fighter, defender: Fighter) -> dict:
         "killed": not defender.is_alive()
     }
 ```
+<!-- /snippet -->
 
 ## Advanced Damage Formula
 
 More interesting combat with randomness and critical hits:
 
+<!-- snippet: 287_combat_melee_1 region=variance -->
 ```python
 import random
 
@@ -115,6 +120,7 @@ def attack_with_variance(attacker: Fighter, defender: Fighter) -> dict:
         "killed": not defender.is_alive()
     }
 ```
+<!-- /snippet -->
 
 ## Combat Entity Class
 
@@ -460,14 +466,17 @@ def on_enemy_killed(enemy):
 3. **Feedback**: Always show damage numbers - players need to see their impact
 
 4. **Death Animation**: Consider delaying entity removal for a death animation:
+   <!-- snippet: 287_combat_melee_1 region=die_animation -->
    ```python
    def die_with_animation(entity):
        # Fade the sprite out, then detach the entity from its grid
        entity.animate("opacity", 0.0, 0.5, mcrfpy.Easing.LINEAR,
                       callback=lambda target, prop, value: target.die())
    ```
+   <!-- /snippet -->
 
 5. **Armor Types**: For more depth, add damage types and resistances:
+   <!-- snippet: 287_combat_melee_1 region=advanced -->
    ```python
    @dataclass
    class AdvancedFighter(Fighter):
@@ -475,6 +484,7 @@ def on_enemy_killed(enemy):
        ice_resist: float = 0.0
        physical_resist: float = 0.0
    ```
+   <!-- /snippet -->
 
 ## See Also
 

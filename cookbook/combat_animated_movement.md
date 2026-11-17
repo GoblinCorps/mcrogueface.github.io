@@ -33,6 +33,7 @@ pathfinding. A move sets both.
 
 ## Basic Animated Move
 
+<!-- snippet: 285_combat_animated_movement_1 region=basic -->
 ```python
 import mcrfpy
 
@@ -41,12 +42,14 @@ def move_with_animation(entity, new_x, new_y, duration=0.2):
     entity.grid_pos = (new_x, new_y)   # logical cell, immediately
     entity.animate("draw_pos", (new_x, new_y), duration, mcrfpy.Easing.EASE_IN_OUT)
 ```
+<!-- /snippet -->
 
 ## Animation with Callback
 
 Know when movement completes for turn-based games. Completion callbacks receive
 `(target, property, final_value)`:
 
+<!-- snippet: 285_combat_animated_movement_1 region=callback -->
 ```python
 import mcrfpy
 
@@ -83,11 +86,13 @@ def player_move(direction):
 
     move_with_callback(player, new_x, new_y, on_complete=on_move_complete)
 ```
+<!-- /snippet -->
 
 ## Available Easing Functions
 
 `easing` accepts an `mcrfpy.Easing` enum value (or its string name). Common choices:
 
+<!-- snippet: 285_combat_animated_movement_1 region=easings -->
 ```python
 # Easing options (mcrfpy.Easing enum):
 # LINEAR       - Constant speed
@@ -110,12 +115,14 @@ def demo_easings(entity, target):
     # EaseInOut - natural movement (best for walking)
     entity.animate("draw_pos", target, 0.5, mcrfpy.Easing.EASE_IN_OUT)
 ```
+<!-- /snippet -->
 
 ## Camera Follow Animation
 
 Animate the grid camera to follow the player. `Grid` also has `.animate()`, and its
 `center` (a Vector; also `center_x`/`center_y`) is in pixel-space camera coordinates:
 
+<!-- snippet: 285_combat_animated_movement_1 region=camera -->
 ```python
 def animate_camera_follow(grid, target_x, target_y, duration=0.2):
     """Smoothly pan camera to follow entity."""
@@ -141,12 +148,14 @@ def move_player_with_camera(player, grid, new_x, new_y, duration=0.2):
     # Animate camera
     animate_camera_follow(grid, new_x, new_y, duration)
 ```
+<!-- /snippet -->
 
 ## Path Animation
 
 Animate movement along a path from `entity.path_to()` (returns a plain list of
 `(x, y)` tuples):
 
+<!-- snippet: 285_combat_animated_movement_1 region=path -->
 ```python
 class PathAnimator:
     """Animate entity movement along a path."""
@@ -217,11 +226,13 @@ def move_enemy_along_path(enemy, player, grid):
     animator = PathAnimator(enemy, path, step_duration=0.15, on_complete=on_path_complete)
     animator.start()
 ```
+<!-- /snippet -->
 
 ## Movement Queue
 
 Handle rapid input by queuing moves:
 
+<!-- snippet: 285_combat_animated_movement_1 region=queue -->
 ```python
 class MovementController:
     """Handles queued movement with animations."""
@@ -304,11 +315,13 @@ def handle_input(key, action):
 
 scene.on_key = handle_input
 ```
+<!-- /snippet -->
 
 ## Bounce Effect
 
 Add a bounce when hitting walls:
 
+<!-- snippet: 285_combat_animated_movement_1 region=bump -->
 ```python
 def move_or_bump(entity, new_x, new_y, grid, duration=0.2):
     """Move to position, or bump animation if blocked."""
@@ -335,11 +348,13 @@ def move_or_bump(entity, new_x, new_y, grid, duration=0.2):
         entity.animate("draw_pos", (bump_x, bump_y), duration * 0.5, mcrfpy.Easing.EASE_OUT,
                        callback=bump_back)
 ```
+<!-- /snippet -->
 
 ## Attack Lunge
 
 Quick lunge toward target then return:
 
+<!-- snippet: 285_combat_animated_movement_1 region=lunge -->
 ```python
 def attack_lunge(attacker, target, duration=0.15):
     """Lunge toward target for attack animation."""
@@ -358,6 +373,7 @@ def attack_lunge(attacker, target, duration=0.15):
     attacker.animate("draw_pos", (lunge_x, lunge_y), duration, mcrfpy.Easing.EASE_IN,
                      callback=return_to_start)
 ```
+<!-- /snippet -->
 
 ## Tips
 
@@ -371,11 +387,13 @@ def attack_lunge(attacker, target, duration=0.15):
 4. **Camera Smoothness**: Use `mcrfpy.Easing.LINEAR` for camera, `EASE_IN_OUT` for entities - prevents jarring camera.
 
 5. **Animation References**: `.animate()` returns an `Animation` object; keep a reference if you need to inspect or cancel it:
+   <!-- snippet: 285_combat_animated_movement_1 region=tip -->
    ```python
    current_anim = entity.animate("draw_pos", (5, 3), 0.5, mcrfpy.Easing.LINEAR)
    current_anim.is_complete   # False while running
    current_anim.stop()        # cancel where it is (no final value, no callback)
    ```
+   <!-- /snippet -->
    Starting a new animation of the same property replaces the running one by default
    (`conflict_mode='replace'`; `'queue'` waits for it, `'error'` raises).
 
