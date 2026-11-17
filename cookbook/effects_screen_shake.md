@@ -13,8 +13,12 @@ Create a brief screen shake on impact for powerful hits, explosions, or dramatic
 
 ## Quick Example
 
+<!-- snippet: 147_effects_screen_shake_1 -->
 ```python
 import mcrfpy
+
+scene = mcrfpy.Scene("demo")
+mcrfpy.current_scene = scene
 
 def screen_shake(frame, intensity=5, duration=0.2):
     """
@@ -39,17 +43,26 @@ def screen_shake(frame, intensity=5, duration=0.2):
 
 # Usage - wrap your game content in a Frame
 game_container = mcrfpy.Frame(pos=(0, 0), size=(1024, 768))
+scene.children.append(game_container)
 # ... add game elements to game_container.children ...
 screen_shake(game_container, intensity=8, duration=0.3)
 ```
+<!-- /snippet -->
 
 ## Multi-Directional Shake
 
 A more realistic shake that moves in multiple directions:
 
+<!-- snippet: 148_effects_screen_shake_2 -->
 ```python
 import mcrfpy
 import random
+
+scene = mcrfpy.Scene("demo")
+mcrfpy.current_scene = scene
+
+game_container = mcrfpy.Frame(pos=(0, 0), size=(1024, 768))
+scene.children.append(game_container)
 
 def screen_shake_multi(frame, intensity=5, duration=0.3, shakes=4):
     """
@@ -89,14 +102,28 @@ def screen_shake_multi(frame, intensity=5, duration=0.3, shakes=4):
 # Usage
 screen_shake_multi(game_container, intensity=10, duration=0.4, shakes=6)
 ```
+<!-- /snippet -->
 
 ## Grid Camera Shake
 
 Shake by animating the grid's center point instead of frame position:
 
+<!-- snippet: 149_effects_screen_shake_3 -->
 ```python
 import mcrfpy
 import random
+
+scene = mcrfpy.Scene("demo")
+mcrfpy.current_scene = scene
+
+grid = mcrfpy.Grid(
+    grid_size=(16, 12),
+    texture=mcrfpy.default_texture,
+    pos=(0, 0),
+    size=(1024, 768),
+    zoom=4.0
+)
+scene.children.append(grid)
 
 def camera_shake(grid, intensity=8, duration=0.3, shakes=4):
     """
@@ -134,11 +161,13 @@ def camera_shake(grid, intensity=8, duration=0.3, shakes=4):
 # Usage
 camera_shake(grid, intensity=12, duration=0.25)
 ```
+<!-- /snippet -->
 
 ## ScreenShake Manager
 
 A complete shake system with presets and state management:
 
+<!-- snippet: 283_effects_screen_shake_manager region=manager -->
 ```python
 import mcrfpy
 import random
@@ -273,14 +302,16 @@ shaker.earthquake()  # Environmental effect
 shaker.death()       # Dramatic moment
 
 # After player moves, update origin so shakes return to correct position
-player_moves()
+grid.center = (grid.center[0] + 32, grid.center[1])  # e.g. the camera follows the player
 shaker.update_origin()
 ```
+<!-- /snippet -->
 
 ## Directional Shake
 
 Shake in a specific direction for directional impacts:
 
+<!-- snippet: 283_effects_screen_shake_manager region=directional -->
 ```python
 import mcrfpy
 import math
@@ -332,6 +363,7 @@ def directional_shake(shaker, direction_x, direction_y, intensity=10, duration=0
 hit_from_x, hit_from_y = -1, 0  # Hit from the left
 directional_shake(shaker, hit_from_x, hit_from_y, intensity=12)
 ```
+<!-- /snippet -->
 
 ## Key Concepts
 

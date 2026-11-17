@@ -24,6 +24,7 @@ The key technique is updating `fill_frame.w` based on the ratio of current to ma
 
 ## Basic Implementation
 
+<!-- snippet: 188_ui_health_bar_1 -->
 ```python
 import mcrfpy
 
@@ -97,11 +98,13 @@ hp_bar.set_health(50)  # Now at 50%
 
 scene.activate()
 ```
+<!-- /snippet -->
 
 ## Enhanced Health Bar with Text and Colors
 
 A more feature-rich version with numeric display and color transitions:
 
+<!-- snippet: 189_ui_health_bar_2 -->
 ```python
 import mcrfpy
 
@@ -215,11 +218,13 @@ hp.damage(20)  # Now 25/100, shows red
 
 scene.activate()
 ```
+<!-- /snippet -->
 
 ## Animated Health Bar
 
 Add smooth transitions when health changes:
 
+<!-- snippet: 191_ui_health_bar_4 -->
 ```python
 import mcrfpy
 
@@ -331,17 +336,23 @@ class AnimatedHealthBar:
 
 
 # Usage
+scene = mcrfpy.Scene("animated_demo")
+
 hp_bar = AnimatedHealthBar(50, 50, 300, 30, current=100, maximum=100)
 hp_bar.add_to_scene(scene.children)
 
 # Damage will animate smoothly
 hp_bar.damage(40)
+
+scene.activate()
 ```
+<!-- /snippet -->
 
 ## Multiple Resource Bars
 
 For games with multiple stats (HP, MP, Stamina, etc.):
 
+<!-- snippet: 190_ui_health_bar_3 -->
 ```python
 import mcrfpy
 
@@ -443,6 +454,7 @@ stats.stamina.set_value(60)
 
 scene.activate()
 ```
+<!-- /snippet -->
 
 ## McRogueFace-Specific Considerations
 
@@ -460,6 +472,7 @@ scene.activate()
 
 ## Complete Example
 
+<!-- snippet: 284_ui_health_bar_5 region=example -->
 ```python
 import mcrfpy
 import random
@@ -495,3 +508,4 @@ def on_key(key, state):
 scene.on_key = on_key
 scene.activate()
 ```
+<!-- /snippet -->
