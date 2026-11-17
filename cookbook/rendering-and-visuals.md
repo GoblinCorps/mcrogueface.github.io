@@ -246,7 +246,6 @@ def update_hud(health_label, current_hp, max_hp):
 
 ### Particle-Like Effects
 
-<!-- snippet: 433_rendering_and_visuals_6 region=particles -->
 ```python
 def create_explosion(scene, x, y):
     """Create explosion effect using animated frames."""
@@ -276,7 +275,6 @@ def create_explosion(scene, x, y):
             ui.remove(p)
     timer = mcrfpy.Timer("explosion_cleanup", cleanup, 600)
 ```
-<!-- /snippet -->
 
 ### Health Bars
 
@@ -390,17 +388,14 @@ for element in all_elements:
 
 ### Reuse Textures
 
-<!-- snippet: 435_rendering_and_visuals_8 region=reuse-textures -->
 ```python
 # Good: One texture, many sprites
-texture = mcrfpy.Texture("assets/kenney_tinydungeon.png", 16, 16)
+texture = mcrfpy.Texture("assets/sprites/all_sprites.png", 16, 16)
 for i in range(100):
-    sprite = mcrfpy.Sprite(x=i * 20, y=300)
+    sprite = mcrfpy.Sprite(x=i * 20, y=0)
     sprite.texture = texture
     sprite.sprite_index = i
-    ui.append(sprite)
 ```
-<!-- /snippet -->
 
 ---
 

@@ -69,7 +69,6 @@ highlight_cells([(1, 1), (2, 1), (3, 1)], mcrfpy.Color(50, 100, 255, 100))
 
 Show where the player can move:
 
-<!-- snippet: 350_grid_cell_highlighting_3 region=movement-range -->
 ```python
 def get_movement_range(start_x, start_y, max_distance):
     """Get all reachable cells within movement range."""
@@ -109,7 +108,6 @@ def show_movement_range():
     # Blue highlight for movement
     highlight_cells(reachable, mcrfpy.Color(50, 100, 255, 100))
 ```
-<!-- /snippet -->
 
 ---
 
@@ -196,7 +194,6 @@ def get_cone_range(origin_x, origin_y, direction, length, spread):
 
 Layer different highlight types:
 
-<!-- snippet: 352_grid_cell_highlighting_5 region=multi-color -->
 ```python
 class HighlightManager:
     """Manage multiple highlight layers."""
@@ -278,7 +275,6 @@ def on_cell_hover(x, y):
             aoe = get_radius_range(x, y, 2, include_center=True)
             highlights.add('danger', aoe)
 ```
-<!-- /snippet -->
 
 ---
 

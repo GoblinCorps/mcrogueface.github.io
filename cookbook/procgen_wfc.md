@@ -38,21 +38,26 @@ WFC excels at generating coherent patterns where tiles must connect properly—r
 
 ## Quick Start
 
-<!-- snippet: 171_procgen_wfc region=wfc -->
 ```python
 import mcrfpy
 import random
-
+from collections import defaultdict
 
 class WFC:
     """Simple Wave Function Collapse for tile grids."""
 
     def __init__(self, grid, rules):
+        """
+        Args:
+            grid: McRogueFace Grid
+            rules: Dict mapping tile -> {direction: [allowed_neighbors]}
+        """
         self.grid = grid
         self.rules = rules
         self.width, self.height = int(grid.grid_size[0]), int(grid.grid_size[1])
         self.tiles = set(rules.keys())
 
+        # Initialize all cells with all possibilities
         self.possibilities = {}
         for y in range(self.height):
             for x in range(self.width):
@@ -61,6 +66,7 @@ class WFC:
     def collapse(self):
         """Run WFC until complete or contradiction."""
         while True:
+            # Find cell with lowest entropy (fewest possibilities)
             cell = self._lowest_entropy_cell()
             if cell is None:
                 return True  # All cells collapsed
@@ -71,22 +77,27 @@ class WFC:
             if not options:
                 return False  # Contradiction!
 
+            # Collapse: pick one possibility
             chosen = random.choice(list(options))
             self.possibilities[(x, y)] = {chosen}
 
+            # Set the tile
             self.grid.at((x, y)).tilesprite = chosen
 
+            # Propagate constraints
             if not self._propagate(x, y):
                 return False
 
         return True
 
     def _lowest_entropy_cell(self):
+        """Find uncollapsed cell with fewest possibilities."""
         best = None
         best_entropy = float('inf')
 
         for pos, options in self.possibilities.items():
-            if len(options) > 1:
+            if len(options) > 1:  # Not yet collapsed
+                # Add small random factor to break ties
                 entropy = len(options) + random.random() * 0.1
                 if entropy < best_entropy:
                     best_entropy = entropy
@@ -95,12 +106,14 @@ class WFC:
         return best
 
     def _propagate(self, start_x, start_y):
+        """Propagate constraints from collapsed cell."""
         stack = [(start_x, start_y)]
 
         directions = {
             'N': (0, -1), 'S': (0, 1),
             'E': (1, 0), 'W': (-1, 0)
         }
+        opposites = {'N': 'S', 'S': 'N', 'E': 'W', 'W': 'E'}
 
         while stack:
             x, y = stack.pop()
@@ -114,24 +127,25 @@ class WFC:
 
                 neighbor_options = self.possibilities[(nx, ny)]
                 if len(neighbor_options) == 1:
-                    continue
+                    continue  # Already collapsed
 
+                # What tiles can the neighbor be?
                 allowed = set()
                 for tile in current_options:
                     if dir_name in self.rules[tile]:
                         allowed.update(self.rules[tile][dir_name])
 
+                # Constrain neighbor
                 new_options = neighbor_options & allowed
                 if new_options != neighbor_options:
                     if not new_options:
-                        return False
+                        return False  # Contradiction
 
                     self.possibilities[(nx, ny)] = new_options
                     stack.append((nx, ny))
 
         return True
 ```
-<!-- /snippet -->
 
 ---
 

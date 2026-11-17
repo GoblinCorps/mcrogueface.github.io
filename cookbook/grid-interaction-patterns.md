@@ -110,9 +110,6 @@ Respond to clicks on specific cells. Callbacks receive `(cell_pos, button, actio
 
 <!-- snippet: 152_grid_interaction_patterns_3 region=click -->
 ```python
-def show_cell_info(x, y, point):
-    print(f"Cell ({x}, {y}): walkable={point.walkable}")
-
 def on_cell_click(cell_pos, button, action):
     x, y = int(cell_pos.x), int(cell_pos.y)
     point = grid.at(x, y)
@@ -123,7 +120,8 @@ def on_cell_click(cell_pos, button, action):
             player.grid_y = y
 
     elif button == mcrfpy.MouseButton.RIGHT and action == mcrfpy.InputState.PRESSED:
-        # Inspect cell
+        # Inspect cell (define show_cell_info to update your own UI, e.g. the
+        # Tile Inspector Panel pattern below)
         show_cell_info(x, y, point)
 
     elif button == mcrfpy.MouseButton.MIDDLE and action == mcrfpy.InputState.PRESSED:

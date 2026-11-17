@@ -336,7 +336,6 @@ def run_all_enemy_ai(enemies, player, grid):
 
 Putting it together:
 
-<!-- snippet: 286_combat_enemy_ai_1 region=enemy -->
 ```python
 class Enemy:
     """Enemy with health, AI, and entity representation."""
@@ -380,7 +379,6 @@ guard = Enemy(grid, 5, 5, enemy_texture, 0, patrol_ai)
 hunter_ai = HunterAI(trigger_range=3, chase_range=10)
 lurker = Enemy(grid, 20, 20, enemy_texture, 1, hunter_ai)
 ```
-<!-- /snippet -->
 
 ## Tips
 

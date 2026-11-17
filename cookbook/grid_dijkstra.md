@@ -65,8 +65,12 @@ Use Dijkstra for enemy movement:
 ```python
 def move_enemy_toward_player(grid, enemy, player):
     """Move enemy one step toward the player."""
+    # Distance map rooted at the player's current position
     dijkstra = grid.get_dijkstra_map(player.grid_pos)
+
+    # Single step from the enemy toward the root (the player)
     step = dijkstra.step_from(enemy.grid_pos)
+
     if step is not None:
         enemy.grid_pos = step
 ```
@@ -106,7 +110,9 @@ def ai_flee(grid, entity, threat_x, threat_y):
     """Move entity away from threat using an inverted Dijkstra map."""
     toward_threat = grid.get_dijkstra_map((threat_x, threat_y))
     away_from_threat = toward_threat.invert()
+
     step = away_from_threat.descent_step(entity.grid_pos)
+
     if step is not None:
         entity.grid_pos = step
 ```

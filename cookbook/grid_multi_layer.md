@@ -203,7 +203,7 @@ class DecorationManager:
 
         names = list(self.DECORATIONS[category].keys())
         grid_w, grid_h = self.grid.grid_size
-        grid_w, grid_h = int(grid_w), int(grid_h)
+        grid_w, grid_h = int(grid_w), int(grid_h)  # grid_size components are floats
 
         placed = 0
         attempts = 0

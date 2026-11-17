@@ -92,7 +92,6 @@ make_button(root, (20, 100), "Quit", lambda: sys.exit(0))
 
 A button that toggles state and updates its appearance.
 
-<!-- snippet: 176_ui_widget_patterns_3 region=toggle -->
 ```python
 def make_toggle(parent, pos, label_text, initial=False, on_change=None):
     """Create a toggle with visual state indicator."""
@@ -131,16 +130,10 @@ def make_toggle(parent, pos, label_text, initial=False, on_change=None):
     parent.children.append(frame)
     return state  # Return state dict for external access
 
-
-def set_music_volume(v):
-    print(f"music volume: {v}")
-
-
 # Usage
 music_toggle = make_toggle(root, (20, 20), "Music", initial=True,
-                            on_change=lambda on: set_music_volume(1.0 if on else 0.0))
+                           on_change=lambda on: set_music_volume(1.0 if on else 0.0))
 ```
-<!-- /snippet -->
 
 ---
 

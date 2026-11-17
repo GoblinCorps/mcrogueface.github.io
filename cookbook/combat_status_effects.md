@@ -341,7 +341,6 @@ def find_target(enemy, potential_targets):
 
 Add effect manager to combat entities:
 
-<!-- snippet: 313_combat_status_effects_1 region=combat_entity -->
 ```python
 class CombatEntity:
     """Entity with combat and effect support."""
@@ -376,7 +375,6 @@ class CombatEntity:
         """Check for an effect."""
         return self.effects.has_effect(name)
 ```
-<!-- /snippet -->
 
 ## Visual Effect Indicators
 
