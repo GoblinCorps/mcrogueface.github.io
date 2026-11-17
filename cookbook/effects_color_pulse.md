@@ -80,6 +80,7 @@ pulse_cell(grid, 5, 5, (255, 200, 0), duration=1.5)  # Golden pulse
 Keep a cell pulsing until stopped, using a single repeating `Timer` driven by
 `math.sin` instead of chained one-shot animations:
 
+<!-- snippet: 133_effects_color_pulse_2 region=pulsing-cell -->
 ```python
 import mcrfpy
 import math
@@ -157,11 +158,13 @@ objective_pulse.start()
 # Later, when objective is reached:
 objective_pulse.stop()
 ```
+<!-- /snippet -->
 
 ## Multiple Pulsing Cells Manager
 
 Manage multiple pulsing effects:
 
+<!-- snippet: 134_effects_color_pulse_3 region=manager -->
 ```python
 import mcrfpy
 
@@ -240,6 +243,7 @@ pulses.remove(15, 10)
 # Clear all when changing levels
 pulses.clear()
 ```
+<!-- /snippet -->
 
 ## Area Pulse Effect
 
