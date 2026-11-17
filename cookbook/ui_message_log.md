@@ -25,6 +25,7 @@ The key insight is that Frame.children is a UICollection, so we can dynamically 
 
 ## Basic Implementation
 
+<!-- snippet: 460_ui_message_log_1 -->
 ```python
 import mcrfpy
 
@@ -134,11 +135,13 @@ log.add("A goblin appears!", mcrfpy.Color(255, 100, 100))
 log.add("You attack the goblin for 5 damage.", mcrfpy.Color(255, 200, 100))
 log.add("The goblin strikes back!", mcrfpy.Color(255, 100, 100))
 ```
+<!-- /snippet -->
 
 ## Enhanced Version with Timestamps and Categories
 
 For more complex games, you may want message categories, timestamps, or filtering:
 
+<!-- snippet: 461_ui_message_log_2 region=enhanced -->
 ```python
 import mcrfpy
 import time
@@ -279,6 +282,7 @@ log.set_filter('combat')
 # Show all again
 log.set_filter(None)
 ```
+<!-- /snippet -->
 
 ## Hooking Up Scroll Controls
 
@@ -322,6 +326,7 @@ log.frame.on_click = on_log_scroll
 
 See the full working example that demonstrates all features:
 
+<!-- snippet: 461_ui_message_log_2 region=usage -->
 ```python
 import mcrfpy
 
@@ -369,3 +374,4 @@ log.system("Press C for combat, L for loot, A for all")
 
 scene.activate()
 ```
+<!-- /snippet -->
