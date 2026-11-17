@@ -37,6 +37,14 @@ assumes; it must contain tests/snippets/ and tools/snippet_regions.py.
   * a page has MORE unmarked python fences than tools/ungated_fences.json allows, has no
     entry there, or has FEWER (the entry is stale: run the default mode, which lowers it)
 
+--base REV (with --check): relative to REV, a page may only gain markers and have its marked
+fences' bodies replaced. A lost or added fence, a changed info string (```python -> ```),
+a missing or new page, or any other changed byte is an error. Without it, converting a
+fence by turning it into a bare ``` fence, or deleting it, would lower the ratchet for free.
+
+A snippet line that would close the page's fence (``` at the fence's length) is refused
+before anything is written; use a longer fence on the page.
+
 THE RATCHET. tools/ungated_fences.json maps each page to the number of python fences that
 are not yet backed by an engine snippet. It can only go down: the default mode lowers an
 entry to the page's actual count and refuses (writing nothing) if a page has more than its
@@ -50,6 +58,7 @@ import importlib.util
 import json
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -76,6 +85,9 @@ class PageError(Exception):
 
 
 class Marked:
+    fence_char = "`"
+    fence_len = 3
+
     def __init__(self, marker_line, open_line, close_line, indent, name, region):
         self.marker_line = marker_line      # 1-based line of <!-- snippet: ... -->
         self.open_line = open_line          # 1-based line of the opening fence
@@ -121,11 +133,18 @@ def scan(text):
     marked          list of Marked, in page order
     unmarked_lines  1-based opening-fence lines of python fences with no marker
     """
+    marked, unmarked, _fences = scan_all(text)
+    return marked, unmarked
+
+
+def scan_all(text):
+    """scan() plus every fence of the page, of any language, in order, as dicts:
+    open (line), close (line), info (the info string), marked (Marked or None)."""
     if "\r" in text:
         raise PageError([(1, "page has CR characters; inject_snippets supports LF only")])
     lines = text.split("\n")
     problems = []
-    marked, unmarked = [], []
+    marked, unmarked, fences = [], [], []
 
     pending = None          # (line, name, region) awaiting its fence
     in_fence = None         # (char, length, open_line, indent, lang, marker or None)
@@ -136,6 +155,7 @@ def scan(text):
             ch, ln, open_line, indent, lang, mk = in_fence
             m = FENCE_CLOSE_RE.match(line)
             if m and m.group(1)[0] == ch and len(m.group(1)) >= ln:
+                fences[-1]["close"] = i
                 if mk is not None:
                     mk.close_line = i
                     marked.append(mk)
@@ -184,10 +204,13 @@ def scan(text):
                                                  f"fence, not python"))
                 else:
                     mk = Marked(pending[0], i, None, indent, pending[1], pending[2])
+                    mk.fence_char, mk.fence_len = fence[0], len(fence)
                 pending = None
             elif is_py:
                 unmarked.append(i)
             in_fence = (fence[0], len(fence), i, indent, lang, mk)
+            fences.append({"open": i, "close": None, "info": line.strip()[len(fence):].strip(),
+                           "marked": mk})
             continue
 
         if pending is not None:
@@ -204,7 +227,7 @@ def scan(text):
                          "marked fence is not followed by '<!-- /snippet -->'"))
     if problems:
         raise PageError(sorted(set(problems)))
-    return marked, unmarked
+    return marked, unmarked, fences
 
 
 class Engine:
@@ -277,6 +300,16 @@ def process_page(text, engine):
         except KeyError as e:
             problems.append((mk.marker_line, e.args[0]))
             continue
+        closer = [k for k, l in enumerate(body.split("\n")[:-1], start=1)
+                  if (FENCE_CLOSE_RE.match(l) and FENCE_CLOSE_RE.match(l).group(1)[0] == mk.fence_char
+                      and len(FENCE_CLOSE_RE.match(l).group(1)) >= mk.fence_len)]
+        if closer:
+            problems.append((mk.marker_line,
+                             f"snippet {mk.name}" + (f" region={mk.region}" if mk.region else "") +
+                             f": line {closer[0]} of the injected text would close the page's "
+                             f"{mk.fence_char * mk.fence_len} fence; nothing was written. Use a longer "
+                             f"fence on the page (````python) or change the snippet"))
+            continue
         want = indent_block(body, mk.indent)
         if lines[mk.open_line:mk.close_line - 1] != want:
             drift.append(mk)
@@ -285,10 +318,23 @@ def process_page(text, engine):
     return "\n".join(out), drift, len(unmarked), unmarked, problems
 
 
+def read_page(path):
+    """Read a page WITHOUT newline translation, so a CR in it is seen (and refused)."""
+    with open(path, encoding="utf-8", newline="") as f:
+        return f.read()
+
+
+def write_page(path, text):
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        f.write(text)
+
+
 def load_ratchet():
     if not RATCHET_PATH.is_file():
         sys.exit(f"inject_snippets: {RATCHET_PATH} missing")
-    data = json.loads(RATCHET_PATH.read_text(encoding="utf-8"))
+    data = json.loads(read_page(RATCHET_PATH))
+    if not data:
+        sys.exit(f"inject_snippets: {RATCHET_PATH} is empty; it must list every page")
     if not isinstance(data, dict) or not all(isinstance(v, int) and v >= 0
                                              for v in data.values()):
         sys.exit(f"inject_snippets: {RATCHET_PATH} must map page -> non-negative int")
@@ -296,8 +342,7 @@ def load_ratchet():
 
 
 def save_ratchet(data):
-    RATCHET_PATH.write_text(json.dumps(dict(sorted(data.items())), indent=2) + "\n",
-                            encoding="utf-8")
+    write_page(RATCHET_PATH, json.dumps(dict(sorted(data.items())), indent=2) + "\n")
 
 
 def page_list(pages):
@@ -320,7 +365,66 @@ def find_engine(arg):
     return Path(cand).expanduser().resolve()
 
 
-def run(pages, engine_dir, check, out=sys.stdout):
+def git_show(rev, rel):
+    p = subprocess.run(["git", "-C", str(SITE_ROOT), "show", f"{rev}:{rel}"],
+                       capture_output=True)
+    return p.stdout.decode("utf-8", "surrogateescape") if p.returncode == 0 else None
+
+
+def base_pages(rev):
+    p = subprocess.run(["git", "-C", str(SITE_ROOT), "ls-tree", "-r", "--name-only", rev, "--",
+                        os.path.dirname(DEFAULT_PAGES)], capture_output=True, text=True)
+    if p.returncode != 0:
+        sys.exit(f"inject_snippets: --base {rev!r}: {p.stderr.strip() or 'not a revision'}")
+    import fnmatch
+    return sorted(n for n in p.stdout.splitlines() if fnmatch.fnmatch(n, DEFAULT_PAGES))
+
+
+def check_against_base(base_text, cur_text):
+    """Problems [(line, msg)] if `cur_text` differs from `base_text` by anything but marking
+    fences: a page may only (a) wrap python fences in markers and (b) have those fences'
+    bodies replaced. A lost or added fence, a changed info string, or any other changed byte
+    is a problem. Line numbers are lines of `cur_text`."""
+    try:
+        _m, _u, bf = scan_all(base_text)
+    except PageError as e:
+        return [(n, f"at --base: {m}") for n, m in e.problems]
+    try:
+        _m, _u, cf = scan_all(cur_text)
+    except PageError as e:
+        return list(e.problems)
+    if len(bf) != len(cf):
+        return [(1, f"the page had {len(bf)} code fence(s) at --base and has {len(cf)}: a "
+                    f"fence was {'lost' if len(cf) < len(bf) else 'added'}")]
+    problems = []
+    for k, (b, c) in enumerate(zip(bf, cf), start=1):
+        if b["info"] != c["info"]:
+            problems.append((c["open"], f"fence {k}: info string changed from {b['info']!r} to {c['info']!r}"))
+    if problems:
+        return problems
+    blines, clines = base_text.split("\n"), cur_text.split("\n")
+    drop_b, drop_c = set(), set()
+    for b, c in zip(bf, cf):
+        mk = c["marked"]
+        if mk is None:
+            continue
+        drop_b.update(range(b["open"] + 1, b["close"]))            # body lines (1-based)
+        drop_c.update(range(c["open"] + 1, c["close"]))
+        drop_c.add(mk.marker_line)
+        drop_c.add(c["close"] + 1)
+    keep_b = [(i, l) for i, l in enumerate(blines, start=1) if i not in drop_b]
+    keep_c = [(i, l) for i, l in enumerate(clines, start=1) if i not in drop_c]
+    for (bi, bl), (ci, cl) in zip(keep_b, keep_c):
+        if bl != cl:
+            return [(ci, f"text outside marked fences changed (base line {bi}: {bl[:60]!r} -> {cl[:60]!r})")]
+    if len(keep_b) != len(keep_c):
+        n = min(len(keep_b), len(keep_c))
+        ci = keep_c[n][0] if n < len(keep_c) else len(clines)
+        return [(ci, "text outside marked fences was added or removed")]
+    return []
+
+
+def run(pages, engine_dir, check, out=sys.stdout, base=None):
     """Core. Returns exit code. Writes pages (and the ratchet) only in default mode and
     only when nothing at all was wrong."""
     engine = Engine(engine_dir)
@@ -328,11 +432,31 @@ def run(pages, engine_dir, check, out=sys.stdout):
     whole_set = not pages
     rels = page_list(pages)
     errors = []
+    if not rels:
+        print(f"inject_snippets: no pages matched ({DEFAULT_PAGES}); refusing to report success "
+              f"for an empty set", file=out)
+        return 1
+    if base is not None:
+        if not check:
+            sys.exit("inject_snippets: --base is a --check option")
+        have = set(base_pages(base))
+        if whole_set:
+            for rel in sorted(have - set(rels)):
+                errors.append(f"{rel}: existed at --base and is gone")
+            for rel in sorted(set(rels) - have):
+                errors.append(f"{rel}: is new since --base (pages may not be added)")
     new_texts = {}
     new_ratchet = dict(ratchet)
 
     for rel in rels:
-        text = (SITE_ROOT / rel).read_text(encoding="utf-8")
+        text = read_page(SITE_ROOT / rel)
+        if base is not None:
+            bt = git_show(base, rel)
+            if bt is None:
+                if not whole_set:
+                    errors.append(f"{rel}: does not exist at --base")
+            else:
+                errors.extend(f"{rel}:{n}: {m}" for n, m in check_against_base(bt, text))
         try:
             new_text, drift, n_unmarked, unmarked_lines, problems = process_page(text, engine)
         except PageError as e:
@@ -381,8 +505,8 @@ def run(pages, engine_dir, check, out=sys.stdout):
     changed = 0
     for rel, nt in new_texts.items():
         path = SITE_ROOT / rel
-        if path.read_text(encoding="utf-8") != nt:
-            path.write_text(nt, encoding="utf-8")
+        if read_page(path) != nt:
+            write_page(path, nt)
             changed += 1
             print(f"rewrote {rel}", file=out)
     if new_ratchet != ratchet:
@@ -400,8 +524,13 @@ def main(argv=None):
     ap.add_argument("pages", nargs="*", help=f"pages (default {DEFAULT_PAGES})")
     ap.add_argument("--check", action="store_true", help="verify only; write nothing")
     ap.add_argument("--engine", help="engine checkout (default $MCRF_ENGINE, else ../McRogueFace)")
+    ap.add_argument("--base", metavar="REV",
+                    help="with --check: also fail if, relative to REV, a page lost or gained a "
+                         "fence, a fence's info string changed, or any byte outside marked fences "
+                         "and marker lines changed (the orchestrator's guard against converting "
+                         "a fence by deleting it)")
     args = ap.parse_args(argv)
-    return run(args.pages, find_engine(args.engine), args.check)
+    return run(args.pages, find_engine(args.engine), args.check, base=args.base)
 
 
 if __name__ == "__main__":

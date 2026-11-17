@@ -10,6 +10,7 @@ import io
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -70,10 +71,21 @@ class Base(unittest.TestCase):
     def ratchet(self):
         return json.loads(I.RATCHET_PATH.read_text())
 
-    def run_tool(self, check, pages=()):
+    def run_tool(self, check, pages=(), base=None):
         buf = io.StringIO()
-        code = I.run(list(pages), self.engine, check, out=buf)
+        code = I.run(list(pages), self.engine, check, out=buf, base=base)
         return code, buf.getvalue()
+
+    def git(self, *args):
+        p = subprocess.run(["git", "-C", str(self.site), "-c", "user.name=t", "-c", "user.email=t@t.invalid",
+                            *args], capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        return p.stdout
+
+    def commit_site(self):
+        self.git("init", "-q")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "base")
 
 
 def fence(body, marker="<!-- snippet: 007_demo -->", indent=""):
@@ -242,6 +254,7 @@ class Ratchet(Base):
 
     def test_missing_page_entry_fails(self):
         self.page("p.md", "text\n")
+        self.page("q.md", "text\n")
         data = self.ratchet()
         del data["cookbook/p.md"]
         I.RATCHET_PATH.write_text(json.dumps(data))
@@ -278,6 +291,158 @@ class Ratchet(Base):
         self.page("p.md", "```python\na\n```\n" + fence("old"), ratchet=2)
         self.assertEqual(self.run_tool(False)[0], 0)
         self.assertEqual(self.ratchet()["cookbook/p.md"], 1)
+
+
+class FenceClosers(Base):
+    def setUp(self):
+        super().setUp()
+        (self.engine / "tests" / "snippets" / "008_fence.py").write_text(
+            "# mcrf: objects=[] verified=1 status=ok\ntext = \"\"\"\nbefore\n```\nafter\n\"\"\"\n"
+            "# region: r\nx = 1\n# endregion\n")
+
+    def test_closing_fence_in_snippet_is_refused_and_nothing_is_written(self):
+        self.page("p.md", "intro\n" + fence("old", "<!-- snippet: 008_fence -->"), ratchet=0)
+        before, rbefore = self.read("p.md"), I.RATCHET_PATH.read_text()
+        code, out = self.run_tool(False)
+        self.assertEqual(code, 1)
+        self.assertIn("008_fence", out)
+        self.assertIn("line 3 of the injected text would close", out)
+        self.assertEqual(self.read("p.md"), before)
+        self.assertEqual(I.RATCHET_PATH.read_text(), rbefore)
+        self.assertEqual(self.run_tool(True)[0], 1)
+
+    def test_longer_page_fence_is_accepted(self):
+        text = "<!-- snippet: 008_fence -->\n````python\nold\n````\n<!-- /snippet -->\n"
+        self.page("p.md", text)
+        code, out = self.run_tool(False)
+        self.assertEqual(code, 0, out)
+        self.assertIn("before\n```\nafter", self.read("p.md"))
+        self.assertEqual(self.run_tool(True)[0], 0)
+
+    def test_a_region_without_the_closer_is_fine(self):
+        self.page("p.md", fence("old", "<!-- snippet: 008_fence region=r -->"))
+        self.assertEqual(self.run_tool(False)[0], 0)
+
+    def test_tilde_fence_is_not_closed_by_backticks(self):
+        text = "<!-- snippet: 008_fence -->\n~~~python\nold\n~~~\n<!-- /snippet -->\n"
+        self.page("p.md", text)
+        self.assertEqual(self.run_tool(False)[0], 0)
+
+
+class BaseMode(Base):
+    PAGE = ("# T\n\nIntro.\n\n```python\nfirst = 1\n```\n\nMiddle.\n\n```bash\nls\n```\n\n"
+            "```python\nsecond = 2\n```\n\nEnd.\n")
+
+    def setUp(self):
+        super().setUp()
+        self.page("p.md", self.PAGE, ratchet=2)
+        self.commit_site()
+
+    def write(self, text, ratchet=None):
+        (self.site / "cookbook" / "p.md").write_text(text)
+        if ratchet is not None:
+            I.RATCHET_PATH.write_text(json.dumps({"cookbook/p.md": ratchet}))
+
+    def base(self):
+        return self.run_tool(True, base="HEAD")
+
+    def test_unchanged_page_passes(self):
+        self.assertEqual(self.base()[0], 0)
+
+    def test_marking_fences_is_the_only_allowed_change(self):
+        self.write(self.PAGE.replace("```python\nfirst = 1\n```", fence("x").rstrip("\n")), ratchet=1)
+        self.assertEqual(self.run_tool(False)[0], 0)
+        code, out = self.base()
+        self.assertEqual(code, 0, out)
+
+    def test_python_fence_turned_into_bare_fence_fails(self):
+        self.write(self.PAGE.replace("```python\nfirst = 1", "```\nfirst = 1"), ratchet=1)
+        self.assertEqual(self.run_tool(True)[0], 0)           # the ratchet alone is fooled...
+        code, out = self.base()                               # ...--base is not
+        self.assertEqual(code, 1)
+        self.assertIn("info string changed", out)
+
+    def test_deleted_fence_fails(self):
+        self.write(self.PAGE.replace("```python\nsecond = 2\n```\n", ""), ratchet=1)
+        self.assertEqual(self.run_tool(True)[0], 0)
+        code, out = self.base()
+        self.assertEqual(code, 1)
+        self.assertIn("lost", out)
+
+    def test_added_fence_fails(self):
+        self.write(self.PAGE + "\n```bash\nx\n```\n")
+        code, out = self.base()
+        self.assertEqual(code, 1)
+        self.assertIn("added", out)
+
+    def test_changed_prose_fails_with_its_line(self):
+        self.write(self.PAGE.replace("Middle.", "Middle!"))
+        code, out = self.base()
+        self.assertEqual(code, 1)
+        self.assertIn("p.md:9: text outside marked fences changed", out)
+
+    def test_edited_unmarked_fence_body_fails(self):
+        self.write(self.PAGE.replace("first = 1", "first = 100"))
+        self.assertEqual(self.base()[0], 1)
+
+    def test_changed_non_python_fence_fails(self):
+        self.write(self.PAGE.replace("ls\n", "rm -rf x\n"))
+        self.assertEqual(self.base()[0], 1)
+
+    def test_appended_text_fails(self):
+        self.write(self.PAGE + "More prose.\n")
+        self.assertEqual(self.base()[0], 1)
+
+    def test_page_removed_or_added_fails(self):
+        (self.site / "cookbook" / "q.md").write_text("new\n")
+        I.RATCHET_PATH.write_text(json.dumps({"cookbook/p.md": 2, "cookbook/q.md": 0}))
+        code, out = self.base()
+        self.assertEqual(code, 1)
+        self.assertIn("q.md: is new since --base", out)
+        (self.site / "cookbook" / "q.md").unlink()
+        (self.site / "cookbook" / "p.md").unlink()
+        (self.site / "cookbook" / "z.md").write_text("z\n")
+        I.RATCHET_PATH.write_text(json.dumps({"cookbook/z.md": 0}))
+        code, out = self.base()
+        self.assertEqual(code, 1)
+        self.assertIn("p.md: existed at --base and is gone", out)
+
+    def test_base_requires_check_and_a_real_revision(self):
+        with self.assertRaises(SystemExit):
+            self.run_tool(False, base="HEAD")
+        with self.assertRaises(SystemExit):
+            self.run_tool(True, base="no-such-rev")
+
+
+class Guards(Base):
+    def test_cr_in_a_page_is_an_error_not_normalised_away(self):
+        (self.site / "cookbook").mkdir(exist_ok=True)
+        (self.site / "cookbook" / "p.md").write_bytes(b"text\r\n```python\nx\n```\n")
+        I.RATCHET_PATH.write_text(json.dumps({"cookbook/p.md": 1}))
+        for check in (True, False):
+            code, out = self.run_tool(check)
+            self.assertEqual(code, 1)
+            self.assertIn("CR characters", out)
+        self.assertEqual((self.site / "cookbook" / "p.md").read_bytes(), b"text\r\n```python\nx\n```\n")
+
+    def test_empty_page_set_is_an_error(self):
+        I.RATCHET_PATH.write_text(json.dumps({"cookbook/gone.md": 0}))
+        for check in (True, False):
+            code, out = self.run_tool(check)
+            self.assertEqual(code, 1)
+            self.assertIn("no pages matched", out)
+
+    def test_empty_ratchet_is_an_error(self):
+        self.page("p.md", "text\n")
+        I.RATCHET_PATH.write_text("{}")
+        with self.assertRaises(SystemExit):
+            self.run_tool(True)
+
+    def test_missing_ratchet_is_an_error(self):
+        self.page("p.md", "text\n")
+        I.RATCHET_PATH.unlink()
+        with self.assertRaises(SystemExit):
+            self.run_tool(True)
 
 
 if __name__ == "__main__":

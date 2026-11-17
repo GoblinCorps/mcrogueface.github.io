@@ -294,16 +294,17 @@ class ScreenShakeManager:
 # Setup
 shaker = ScreenShakeManager(grid, mode="camera")
 
-# Usage
-shaker.light_hit()   # Small impact
-shaker.heavy_hit()   # Bigger impact
-shaker.explosion()   # Boom!
-shaker.earthquake()  # Environmental effect
-shaker.death()       # Dramatic moment
-
 # After player moves, update origin so shakes return to correct position
 grid.center = (grid.center[0] + 32, grid.center[1])  # e.g. the camera follows the player
 shaker.update_origin()
+
+# Usage: a shake started while another is running is ignored (is_shaking), so each
+# preset is started after the previous one has finished
+shaker.light_hit()   # Small impact
+mcrfpy.Timer("hit_heavy", lambda t, rt: shaker.heavy_hit(), 300, once=True)       # Bigger impact
+mcrfpy.Timer("hit_boom", lambda t, rt: shaker.explosion(), 650, once=True)        # Boom!
+mcrfpy.Timer("hit_quake", lambda t, rt: shaker.earthquake(), 1150, once=True)     # Environmental effect
+mcrfpy.Timer("hit_death", lambda t, rt: shaker.death(), 2300, once=True)          # Dramatic moment
 ```
 <!-- /snippet -->
 
