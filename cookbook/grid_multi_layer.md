@@ -33,6 +33,7 @@ Layers come in two flavors: `mcrfpy.TileLayer` (sprite indices, needs a `texture
 
 ## Quick Start
 
+<!-- snippet: 166_grid_multi_layer_1 -->
 ```python
 import mcrfpy
 
@@ -64,6 +65,7 @@ for layer in (base_layer, decor_layer, effect_layer, ui_layer):
 base_layer.set((5, 5), TILE_FLOOR)
 decor_layer.set((5, 5), TILE_RUG)  # Rug on top of floor
 ```
+<!-- /snippet -->
 
 ---
 
@@ -73,6 +75,7 @@ decor_layer.set((5, 5), TILE_RUG)  # Rug on top of floor
 
 Display sprite tiles from the grid's texture:
 
+<!-- snippet: 404_grid_multi_layer_3 region=tile-layers -->
 ```python
 # Create tile layer
 decor = mcrfpy.TileLayer(z_index=1, name="decor", texture=mcrfpy.default_texture)
@@ -86,11 +89,13 @@ decor.set((10, 15), TILE_CHEST)
 # Clear a tile (make transparent) - TileLayer has no clear(); set index -1 instead
 decor.set((10, 10), -1)
 ```
+<!-- /snippet -->
 
 ### Color Layers
 
 Apply color overlays to cells:
 
+<!-- snippet: 404_grid_multi_layer_3 region=color-layers -->
 ```python
 # Create color layer
 effects = mcrfpy.ColorLayer(z_index=2, name="effects")
@@ -105,6 +110,7 @@ effects.set((5, 5), mcrfpy.Color(0, 0, 0, 0))  # Transparent
 # Clear entire layer - ColorLayer has no clear(); fill() with a transparent color instead
 effects.fill(mcrfpy.Color(0, 0, 0, 0))
 ```
+<!-- /snippet -->
 
 ---
 
@@ -112,7 +118,27 @@ effects.fill(mcrfpy.Color(0, 0, 0, 0))
 
 Manage static decorations efficiently:
 
+<!-- snippet: 167_grid_multi_layer_2 -->
 ```python
+import mcrfpy
+
+scene = mcrfpy.Scene("layers-decor")
+mcrfpy.current_scene = scene
+
+grid = mcrfpy.Grid(
+    grid_size=(16, 12),
+    texture=mcrfpy.default_texture,
+    pos=(0, 0),
+    size=(1024, 768),
+    zoom=4.0
+)
+scene.children.append(grid)
+
+for y in range(12):
+    for x in range(16):
+        grid.at(x, y).walkable = True
+
+
 class DecorationManager:
     """Manage decorative tile overlays."""
 
@@ -177,7 +203,7 @@ class DecorationManager:
 
         names = list(self.DECORATIONS[category].keys())
         grid_w, grid_h = self.grid.grid_size
-        grid_w, grid_h = int(grid_w), int(grid_h)  # grid_size components are floats
+        grid_w, grid_h = int(grid_w), int(grid_h)
 
         placed = 0
         attempts = 0
@@ -212,6 +238,7 @@ decor.place(11, 10, 'furniture', 'chair')
 decor.scatter('debris', 20)
 decor.scatter('nature', 15)
 ```
+<!-- /snippet -->
 
 ---
 
@@ -219,6 +246,7 @@ decor.scatter('nature', 15)
 
 Dynamic visual effects:
 
+<!-- snippet: 405_grid_multi_layer_4 region=effects -->
 ```python
 class EffectLayer:
     """Manage visual effects with color overlays."""
@@ -326,6 +354,7 @@ def game_update(timer, runtime):
 
 mcrfpy.Timer("effects", game_update, 16)
 ```
+<!-- /snippet -->
 
 ---
 
@@ -333,6 +362,7 @@ mcrfpy.Timer("effects", game_update, 16)
 
 Combine all layers:
 
+<!-- snippet: 406_grid_multi_layer_5 region=layer-stack -->
 ```python
 class LayeredGrid:
     """Complete multi-layer grid system."""
@@ -398,11 +428,13 @@ def update(timer, runtime):
 
 mcrfpy.Timer("layers", update, 16)
 ```
+<!-- /snippet -->
 
 ---
 
 ## Performance Considerations
 
+<!-- snippet: 407_grid_multi_layer_6 region=optimized -->
 ```python
 class OptimizedLayers:
     """Performance-optimized layer management."""
@@ -434,6 +466,7 @@ class OptimizedLayers:
             effect_layer.set((x, y), color)
         self.dirty_effects.clear()
 ```
+<!-- /snippet -->
 
 ---
 
