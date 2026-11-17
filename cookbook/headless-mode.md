@@ -20,7 +20,7 @@ McRogueFace supports headless operation for automated testing, CI pipelines, and
 **Key Files:**
 - `src/GameEngine.cpp::step()` - Simulation advancement
 - `src/McRFPy_API.cpp::_step()` / `_advance()` - Python bindings for `step()` and `advance()`
-- `src/McRFPy_Automation.cpp::_screenshot()` - Synchronous capture
+- `src/McRFPy_Automation.cpp::_screenshot()` - Screenshot capture
 
 ---
 
@@ -39,7 +39,7 @@ Launch McRogueFace with the `--headless` flag:
 In headless mode:
 - No window is created (uses RenderTexture internally)
 - Simulation time is frozen until `step()` or `advance()` is called
-- Screenshots capture current state synchronously
+- A screenshot is the last complete frame; `step()` does not draw, so the next screenshot after a step draws the scene as it is then
 
 ---
 
@@ -47,6 +47,7 @@ In headless mode:
 
 The `mcrfpy.step()` function advances simulation time in headless mode:
 
+<!-- snippet: 411_headless_mode_3 region=step -->
 ```python
 import mcrfpy
 
@@ -61,6 +62,7 @@ dt = mcrfpy.step(1)  # Advance 1 second
 dt = mcrfpy.step(None)  # or mcrfpy.step()
 print(f"Advanced {dt} seconds to next event")
 ```
+<!-- /snippet -->
 
 ### What step() Does
 
@@ -70,16 +72,18 @@ print(f"Advanced {dt} seconds to next event")
 2. Runs the scene update, timers whose intervals have elapsed (once per elapsed interval, so a wide step catches a timer up), and Python `Scene.update()` callbacks
 3. Updates all active animations and scene transitions (including their completion) with the whole `dt`
 4. Records frame-time metrics and increments the frame counter
-5. Does NOT render or process input (call `screenshot()` to trigger a render)
+5. Does NOT render or process input (the next `screenshot()` after a step draws the scene)
 
 `dt` must be finite and `>= 0`: a negative, NaN or infinite value raises `ValueError`, and one past the clock's range raises `OverflowError`. Use `step(None)` for "next event".
 
 To let a span of simulated time pass as a series of frames, one at each timer deadline, use `advance()`:
 
+<!-- snippet: 411_headless_mode_3 region=advance -->
 ```python
 mcrfpy.advance(2500)   # int MILLISECONDS (step() takes float seconds)
 print(mcrfpy.get_metrics()["simulation_time_ms"])  # simulated ms; "runtime" is wall-clock seconds
 ```
+<!-- /snippet -->
 
 `advance(ms)` is headless-only; `ms` must be an int >= 0. Both `step()` and `advance()` fire every timer interval in the span. The difference is frames: `step()` covers the span in one frame, while `advance()` runs a frame at each timer deadline, so animations and `Scene.update()` also see the time between firings.
 
@@ -89,10 +93,12 @@ Only one thread may run frames: the first thread that calls `step()`/`advance()`
 
 Seed the engine's internal random streams (entity behaviors, `Sound.play_varied`) before anything consumes randomness:
 
+<!-- snippet: 411_headless_mode_3 region=seed -->
 ```python
 mcrfpy.set_random_seed(1234)    # unsigned 32-bit int
 print(mcrfpy.get_random_seed())  # 1234; record this to replay an unseeded run
 ```
+<!-- /snippet -->
 
 ---
 
@@ -100,6 +106,7 @@ print(mcrfpy.get_random_seed())  # 1234; record this to replay an unseeded run
 
 Timers run on simulation time in headless mode, so they fire deterministically. Timer callbacks receive `(timer_object, runtime_ms)`, where `runtime_ms` is the firing's scheduled deadline:
 
+<!-- snippet: 412_headless_mode_4 region=timer -->
 ```python
 import mcrfpy
 import sys
@@ -122,9 +129,11 @@ if fired[0]:
 
 t.stop()  # Clean up timer
 ```
+<!-- /snippet -->
 
 ### Timer API
 
+<!-- snippet: 412_headless_mode_4 region=api -->
 ```python
 t = mcrfpy.Timer("name", callback, interval_ms)
 
@@ -145,6 +154,7 @@ t.remaining   # Time until next fire, in ms (int, read-only)
 t.once        # Fire only once? (bool)
 t.callback    # The callback function
 ```
+<!-- /snippet -->
 
 ---
 
@@ -152,6 +162,7 @@ t.callback    # The callback function
 
 Animations update when `step()` is called:
 
+<!-- snippet: 168_headless_mode_1 -->
 ```python
 import mcrfpy
 
@@ -171,13 +182,15 @@ print(f"Frame x: {frame.x}")  # ~250 (halfway)
 mcrfpy.step(1.0)
 print(f"Frame x: {frame.x}")  # 500 (complete)
 ```
+<!-- /snippet -->
 
 ---
 
-## Synchronous Screenshots
+## Screenshots
 
-In headless mode, `automation.screenshot()` is synchronous - it renders the current scene state before capturing:
+A screenshot is the last complete frame. Headless `step()` does not draw, so the next screenshot after a step draws the scene as it is at that moment. If no frame has been rendered yet, the first screenshot renders one:
 
+<!-- snippet: 169_headless_mode_2 -->
 ```python
 import mcrfpy
 from mcrfpy import automation
@@ -190,27 +203,32 @@ frame = mcrfpy.Frame(pos=(100, 100), size=(200, 200),
 ui.append(frame)
 mcrfpy.current_scene = scene
 
-# Screenshot captures current state immediately (no timer needed)
+# No frame has been rendered yet, so the first screenshot renders one (no timer needed)
 automation.screenshot("/tmp/red_frame.png")
 
 # Change to green
 frame.fill_color = mcrfpy.Color(0, 255, 0)
 
-# Next screenshot shows green
+# A screenshot shows the last complete frame, so shooting now would save the red image
+# again. Headless, step() runs a frame; the next screenshot draws it.
+mcrfpy.step(0.016)
+
+# Now the screenshot shows green
 automation.screenshot("/tmp/green_frame.png")
 ```
+<!-- /snippet -->
 
 ### Windowed vs Headless Screenshot Behavior
 
 | Mode | Behavior |
 |------|----------|
-| Windowed | Captures previous frame's buffer (async) |
-| Headless | Renders current state, then captures (sync) |
+| Windowed | The last frame the loop completed |
+| Headless | The first screenshot renders a frame; after a `step()`, the next one draws the scene as it is then |
 
-In windowed mode, you need timer callbacks to ensure the frame has rendered:
+Either way, two screenshots with no frame (or `step()`) between them return the same image, and one taken while a frame is rendering raises `RuntimeError`. In windowed mode the loop supplies the frames, so shoot from a timer callback:
 
 ```python
-# Windowed mode pattern (NOT needed in headless)
+# Windowed mode pattern (headless: call step() instead)
 def capture(timer, runtime):
     automation.screenshot("output.png")
     sys.exit(0)
@@ -250,7 +268,7 @@ sys.exit(0)
 
 ### LLM Agent Orchestration
 
-The `step()` function enables external agents to control simulation pacing:
+The `step()` function enables external agents to control simulation pacing. Each screenshot below follows a `step()` (the first renders the initial scene), so it shows the result of the previous action:
 
 ```python
 import mcrfpy
@@ -304,9 +322,11 @@ for i in range(100):
 A headless `--exec` script must end with `sys.exit()`, since `step()`/`advance()` are the only headless clock; pass `--run-forever` to keep a headless process alive after its scripts finish. That loop does not move the simulation clock (#448), and it refuses to start if a background thread already drives the clock.
 
 **Automation Functions:**
-- `automation.screenshot(filename)` - Capture current frame
-  - In headless: Synchronous (renders then captures)
-  - In windowed: Asynchronous (captures previous frame buffer)
+- `automation.screenshot(filename)` - Capture the last complete frame
+  - If no frame has been rendered yet: renders the first one, then captures
+  - In headless: `step()` does not draw; the next screenshot after a step draws the scene as it is then, and further calls with no step return that image
+  - In windowed: the last frame the loop completed
+  - Raises `RuntimeError` if called while a frame is being rendered
 
 ---
 

@@ -307,7 +307,7 @@ mcrfpy.advance(250)
 mcrfpy.set_random_seed(42)
 mcrfpy.get_random_seed()   # -> 42
 
-# Screenshots (synchronous in headless)
+# Screenshots (the last complete frame; headless: step() first to see changes)
 from mcrfpy import automation
 automation.screenshot("game.png")
 ```
