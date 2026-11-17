@@ -23,7 +23,9 @@ Reusable patterns for building menus, dialogs, and HUD elements using Frame, Cap
 
 Most widget patterns fit into this basic structure:
 
+<!-- snippet: 174_ui_widget_patterns_1 -->
 ```python
+# Setup Template - the basic scaffold shared by all widget patterns on this page.
 import mcrfpy
 
 # Create scene and get UI collection
@@ -41,6 +43,7 @@ ui.append(root)
 
 mcrfpy.current_scene = scene
 ```
+<!-- /snippet -->
 
 ---
 
@@ -89,6 +92,7 @@ make_button(root, (20, 100), "Quit", lambda: sys.exit(0))
 
 A button that toggles state and updates its appearance.
 
+<!-- snippet: 176_ui_widget_patterns_3 region=toggle -->
 ```python
 def make_toggle(parent, pos, label_text, initial=False, on_change=None):
     """Create a toggle with visual state indicator."""
@@ -127,10 +131,16 @@ def make_toggle(parent, pos, label_text, initial=False, on_change=None):
     parent.children.append(frame)
     return state  # Return state dict for external access
 
+
+def set_music_volume(v):
+    print(f"music volume: {v}")
+
+
 # Usage
 music_toggle = make_toggle(root, (20, 20), "Music", initial=True,
-                           on_change=lambda on: set_music_volume(1.0 if on else 0.0))
+                            on_change=lambda on: set_music_volume(1.0 if on else 0.0))
 ```
+<!-- /snippet -->
 
 ---
 
@@ -138,6 +148,7 @@ music_toggle = make_toggle(root, (20, 20), "Music", initial=True,
 
 A list of selectable options with keyboard navigation support.
 
+<!-- snippet: 177_ui_widget_patterns_4 region=menu -->
 ```python
 class VerticalMenu:
     def __init__(self, parent, pos, options, on_select):
@@ -182,6 +193,11 @@ class VerticalMenu:
         _, value = self.options[self.selected]
         self.on_select(value)
 
+
+def handle_menu_choice(value):
+    print(f"chose: {value}")
+
+
 # Usage
 menu = VerticalMenu(root, (20, 20), [
     ("Continue", "continue"),
@@ -189,6 +205,7 @@ menu = VerticalMenu(root, (20, 20), [
     ("Options", "options"),
     ("Quit", "quit")
 ], on_select=handle_menu_choice)
+
 
 # Keyboard navigation via scene.on_key
 def handle_key(key, action):
@@ -201,8 +218,10 @@ def handle_key(key, action):
     elif key == mcrfpy.Key.ENTER:
         menu.confirm()
 
+
 scene.on_key = handle_key
 ```
+<!-- /snippet -->
 
 ---
 
@@ -210,6 +229,7 @@ scene.on_key = handle_key
 
 A dialog that captures all input until dismissed.
 
+<!-- snippet: 178_ui_widget_patterns_5 region=modal -->
 ```python
 class ModalDialog:
     def __init__(self, scene, message, on_dismiss=None):
@@ -267,9 +287,11 @@ class ModalDialog:
         if self.on_dismiss:
             self.on_dismiss()
 
+
 # Usage
 dialog = ModalDialog(scene, "Game saved successfully!")
 ```
+<!-- /snippet -->
 
 ---
 
@@ -277,6 +299,7 @@ dialog = ModalDialog(scene, "Game saved successfully!")
 
 Number keys (1-9) mapped to inventory slots.
 
+<!-- snippet: 179_ui_widget_patterns_6 region=hotbar -->
 ```python
 class Hotbar:
     def __init__(self, parent, pos, slot_count=9):
@@ -317,8 +340,9 @@ class Hotbar:
             self.selected = index
             self._update_selection()
 
+
 # Usage
-hotbar = Hotbar(root, (200, 700))
+hotbar = Hotbar(root, (20, 340))
 
 # Key mapping for number keys
 num_keys = {
@@ -327,14 +351,17 @@ num_keys = {
     mcrfpy.Key.NUM_7: 6, mcrfpy.Key.NUM_8: 7, mcrfpy.Key.NUM_9: 8,
 }
 
+
 def handle_key(key, action):
     if action != mcrfpy.InputState.PRESSED:
         return
     if key in num_keys:
         hotbar.select(num_keys[key])
 
+
 scene.on_key = handle_key
 ```
+<!-- /snippet -->
 
 ---
 
@@ -342,6 +369,7 @@ scene.on_key = handle_key
 
 A frame that can be dragged by its title bar.
 
+<!-- snippet: 180_ui_widget_patterns_7 region=window -->
 ```python
 class DraggableWindow:
     def __init__(self, parent, pos, size, title):
@@ -386,13 +414,15 @@ class DraggableWindow:
         self.title_bar.on_move = on_move
         self.title_bar.on_exit = stop_drag
 
+
 # Usage
-window = DraggableWindow(root, (100, 100), (250, 300), "Inventory")
+window = DraggableWindow(root, (20, 20), (250, 300), "Inventory")
 
 # Add content to window.frame.children at y >= window.content_y
 item_list = mcrfpy.Caption(text="Items here...", pos=(10, window.content_y + 10))
 window.frame.children.append(item_list)
 ```
+<!-- /snippet -->
 
 ---
 
