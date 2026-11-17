@@ -25,6 +25,7 @@ There's also a read-only `element.hovered` property if you'd rather poll state f
 
 ## Basic Tooltip Implementation
 
+<!-- snippet: 200_ui_tooltip_1 -->
 ```python
 import mcrfpy
 
@@ -149,6 +150,7 @@ tooltip.add_to_scene(scene.children)
 make_hoverable(button1, tooltip, "Deal damage to the enemy")
 make_hoverable(button2, tooltip, "Reduce incoming damage by 50%")
 ```
+<!-- /snippet -->
 
 Because `on_enter`/`on_exit` fire directly from the engine's mouse tracking, there's no need for a polling `Timer` just to detect "mouse left the element" — `on_exit` already tells you that.
 
@@ -156,6 +158,7 @@ Because `on_enter`/`on_exit` fire directly from the engine's mouse tracking, the
 
 A more robust system for managing tooltips across many elements, with a hover delay before the tooltip appears:
 
+<!-- snippet: 201_ui_tooltip_2 -->
 ```python
 import mcrfpy
 
@@ -326,11 +329,13 @@ tips.register(
 # Add tooltip last for top layer
 tips.add_to_scene(scene.children)
 ```
+<!-- /snippet -->
 
 ## Inline Tooltip (Attached to Element)
 
 Sometimes you want tooltips that appear adjacent to elements rather than following the cursor:
 
+<!-- snippet: 202_ui_tooltip_3 -->
 ```python
 import mcrfpy
 
@@ -395,6 +400,7 @@ scene.children.append(setting_label)
 
 create_info_icon(200, 98, "Affects enemy\nHP and damage", scene.children)
 ```
+<!-- /snippet -->
 
 ## McRogueFace-Specific Considerations
 
@@ -412,6 +418,7 @@ create_info_icon(200, 98, "Affects enemy\nHP and damage", scene.children)
 
 ## Complete Example
 
+<!-- snippet: 203_ui_tooltip_4 -->
 ```python
 import mcrfpy
 
@@ -547,3 +554,4 @@ for i, (name, desc) in enumerate(items):
 # Add tooltip last
 tips.add_to_scene(scene.children)
 ```
+<!-- /snippet -->

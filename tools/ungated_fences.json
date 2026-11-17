@@ -23,10 +23,10 @@
   "cookbook/procgen_wfc.md": 8,
   "cookbook/rendering-and-visuals.md": 16,
   "cookbook/ui-widget-patterns.md": 7,
-  "cookbook/ui_alignment.md": 8,
+  "cookbook/ui_alignment.md": 0,
   "cookbook/ui_health_bar.md": 0,
-  "cookbook/ui_menu.md": 4,
-  "cookbook/ui_message_log.md": 4,
-  "cookbook/ui_modal_dialog.md": 4,
-  "cookbook/ui_tooltip.md": 4
+  "cookbook/ui_menu.md": 3,
+  "cookbook/ui_message_log.md": 1,
+  "cookbook/ui_modal_dialog.md": 1,
+  "cookbook/ui_tooltip.md": 0
 }
