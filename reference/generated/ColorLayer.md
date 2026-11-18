@@ -6,11 +6,11 @@ mcrf:
     - ColorLayer
   diataxis: reference
   source: generated
-  verified: 0.3.5
+  verified: 0.3.6
   verified_commit: ""
 ---
 
-# ColorLayer {% include api_badge.html kind="changed" version="0.3.5-dev" %}
+# ColorLayer {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}ColorLayer(name=None, z_index=-1, grid_size=None, grid=None)
 
@@ -44,7 +44,7 @@ Methods:
     layer[x, y] -> Color: Get the color at cell (x, y); layer[x, y] = color sets it
         (key must be a 2-tuple of ints)
     fill_rect((x, y), (w, h), color): Fill the rectangle at (x, y) of size (w, h) with a color.
-        pos and size must be real tuples (a Vector or list raises TypeError)
+        pos and size may each be a tuple, list or Vector
     edit(): Context manager yielding a writable (height, width, 4) uint8 view
     draw_fov(source, radius=None, fov=None, visible=None, discovered=None, unknown=None):
         Draw FOV-based visibility colors
@@ -139,14 +139,14 @@ Returns:
     self for method chaining
 {% endraw %}
 
-### `at(pos: tuple | Vector) or (x: int, y: int) -> Color`
+### `at(pos: tuple | Vector) or (x: int, y: int) -> Color` {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}at(pos: tuple | Vector) or (x: int, y: int) -> Color
 
 Get the color at a cell position.
 
 Args:
-    pos: Position as (x, y) tuple, list, or Vector; or pass x and y separately
+    pos: Cell as (x, y) tuple, list, or Vector (fractions are floored); or pass x and y separately
 
 Returns:
     Color at the specified cell
@@ -204,26 +204,26 @@ Args:
     color: Color object or (r, g, b[, a]) tuple
 {% endraw %}
 
-### `fill_rect(pos: tuple, size: tuple, color: Color) -> None`
+### `fill_rect(pos: tuple, size: tuple, color: Color) -> None` {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}fill_rect(pos: tuple, size: tuple, color: Color) -> None
 
 Fill a rectangular region with a color.
 
 Args:
-    pos: Top-left corner as (x, y)
-    size: Dimensions as (width, height)
+    pos: Top-left corner: (x, y) tuple, list or Vector
+    size: Dimensions: (width, height) tuple, list or Vector
     color: Color object or (r, g, b[, a]) tuple
 {% endraw %}
 
-### `set(pos, color: Color) -> None`
+### `set(pos, color: Color) -> None` {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}set(pos, color: Color) -> None
 
 Set the color at a cell position.
 
 Args:
-    pos: Position as (x, y) tuple, list, or Vector
+    pos: Cell as (x, y) tuple, list, or Vector (fractions are floored)
     color: Color object or (r, g, b[, a]) tuple
 
 Raises:

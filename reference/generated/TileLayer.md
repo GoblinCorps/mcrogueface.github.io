@@ -6,11 +6,11 @@ mcrf:
     - TileLayer
   diataxis: reference
   source: generated
-  verified: 0.3.5
+  verified: 0.3.6
   verified_commit: ""
 ---
 
-# TileLayer {% include api_badge.html kind="changed" version="0.3.5-dev" %}
+# TileLayer {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}TileLayer(name=None, z_index=-1, texture=None, grid_size=None, grid=None)
 
@@ -48,7 +48,7 @@ Methods:
     layer[x, y] -> int: Get the tile index at cell (x, y); layer[x, y] = index sets it
         (key must be a 2-tuple of ints)
     fill_rect((x, y), (w, h), index): Fill the rectangle at (x, y) of size (w, h) with a
-        tile index. pos and size must be real tuples (a Vector or list raises TypeError)
+        tile index. pos and size may each be a tuple, list or Vector
     edit(): Context manager yielding a writable (height, width) int32 view of the tile indices
     apply_threshold(source, range, tile) -> TileLayer: Set a tile where the HeightMap
         value is within (min, max)
@@ -117,14 +117,14 @@ Note:
     Any int is stored. An index outside 0 to sprite_count-1 is not rendered (like -1); one above the highest sprite index of a known texture also warns (TextureWarning).
 {% endraw %}
 
-### `at(pos: tuple | Vector) or (x: int, y: int) -> int`
+### `at(pos: tuple | Vector) or (x: int, y: int) -> int` {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}at(pos: tuple | Vector) or (x: int, y: int) -> int
 
 Get the tile index at a cell position. Returns -1 if no tile is set.
 
 Args:
-    pos: Position as (x, y) tuple, list, or Vector; or pass x and y separately
+    pos: Cell as (x, y) tuple, list, or Vector (fractions are floored); or pass x and y separately
 
 Returns:
     Tile index at the specified cell, or -1 if empty
@@ -159,29 +159,29 @@ Note:
     Any int is stored. An index outside 0 to sprite_count-1 is not rendered (like -1); one above the highest sprite index of a known texture also warns (TextureWarning).
 {% endraw %}
 
-### `fill_rect(pos: tuple, size: tuple, index: int) -> None` {% include api_badge.html kind="changed" version="0.3.5-dev" %}
+### `fill_rect(pos: tuple, size: tuple, index: int) -> None` {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}fill_rect(pos: tuple, size: tuple, index: int) -> None
 
 Fill a rectangular region with a tile index.
 
 Args:
-    pos: Top-left corner as (x, y)
-    size: Dimensions as (width, height)
+    pos: Top-left corner: (x, y) tuple, list or Vector
+    size: Dimensions: (width, height) tuple, list or Vector
     index: Tile index to fill with (-1 for no tile)
 
 Note:
     Any int is stored. An index outside 0 to sprite_count-1 is not rendered (like -1); one above the highest sprite index of a known texture also warns (TextureWarning).
 {% endraw %}
 
-### `set(pos, index: int) -> None` {% include api_badge.html kind="changed" version="0.3.5-dev" %}
+### `set(pos, index: int) -> None` {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}set(pos, index: int) -> None
 
 Set the tile index at a cell position. Use -1 to clear the tile.
 
 Args:
-    pos: Position as (x, y) tuple, list, or Vector
+    pos: Cell as (x, y) tuple, list, or Vector (fractions are floored)
     index: Tile index (-1 for no tile)
 
 Raises:

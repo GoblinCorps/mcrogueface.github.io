@@ -6,7 +6,7 @@ mcrf:
     - GridData
   diataxis: reference
   source: generated
-  verified: 0.3.5
+  verified: 0.3.6
   verified_commit: ""
 ---
 
@@ -144,14 +144,14 @@ Note:
     Also accepts a single positional tuple/list/Vector: at((x, y)) or at(vec), or keyword form: at(pos=(x, y)).
 {% endraw %}
 
-### `compute_fov(pos, radius: int = 0, light_walls: bool = True, algorithm: FOV | int = FOV.BASIC) -> None` {% include api_badge.html kind="added" version="0.2.8-dev" %}
+### `compute_fov(pos, radius: int = 0, light_walls: bool = True, algorithm: FOV | int = FOV.BASIC) -> None` {% include api_badge.html kind="added" version="0.2.8-dev" %} {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}compute_fov(pos, radius: int = 0, light_walls: bool = True, algorithm: FOV | int = FOV.BASIC) -> None
 
 Compute field of view from a position. Updates the internal FOV state; use is_in_fov() to query visibility.
 
 Args:
-    pos: Position as (x, y) tuple, list, or Vector
+    pos: Cell as (x, y) tuple, list, or Vector (fractions are floored)
     radius: Maximum view distance (0 = unlimited)
     light_walls: Whether walls are lit when visible
     algorithm: FOV algorithm to use (FOV.BASIC, FOV.DIAMOND, FOV.SHADOW, FOV.PERMISSIVE_0-8)

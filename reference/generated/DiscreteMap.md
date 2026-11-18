@@ -6,7 +6,7 @@ mcrf:
     - DiscreteMap
   diataxis: reference
   source: generated
-  verified: 0.3.5
+  verified: 0.3.6
   verified_commit: ""
 ---
 
@@ -229,14 +229,14 @@ Returns:
     DiscreteMap: new map with mapped values
 {% endraw %}
 
-### `get(x, y) or (pos) -> int | Enum`
+### `get(x, y) or (pos) -> int | Enum` {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}get(x, y) or (pos) -> int | Enum
 
 Get the value at integer coordinates.
 
 Args:
-    x, y: Position as two ints, tuple, list, or Vector
+    x, y: Cell as two numbers, tuple, list, or Vector (fractions are floored)
 
 Returns:
     int or enum member if enum_type is set

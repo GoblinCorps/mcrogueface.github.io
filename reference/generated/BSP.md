@@ -6,7 +6,7 @@ mcrf:
     - BSP
   diataxis: reference
   source: generated
-  verified: 0.3.5
+  verified: 0.3.6
   verified_commit: ""
 ---
 
@@ -105,11 +105,11 @@ Returns:
     Iterator yielding BSPNode objects
 {% endraw %}
 
-### `split_once(horizontal: bool, position: int) -> BSP`
+### `split_once(horizontal: bool, position: int) -> BSP` {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}split_once(horizontal: bool, position: int) -> BSP
 
-Split the root node once at the specified position. horizontal=True creates a horizontal divider, producing top/bottom rooms. horizontal=False creates a vertical divider, producing left/right rooms.
+Split the root node once at the specified position. horizontal=True creates a horizontal divider, producing top/bottom rooms. horizontal=False creates a vertical divider, producing left/right rooms. A re-split replaces any existing children, and invalidates existing BSPNode references.
 
 Args:
     horizontal: True for horizontal divider (top/bottom), False for vertical (left/right)
@@ -117,13 +117,16 @@ Args:
 
 Returns:
     BSP: self, for method chaining
+
+Raises:
+    ValueError: position is not strictly inside the root's extent (x < position < x + w for a vertical split, y < position < y + h for a horizontal one), so a child would be empty; the tree is left unchanged
 {% endraw %}
 
-### `split_recursive(depth: int, min_size: tuple[int, int], max_ratio: float = 1.5, seed: int | None = None) -> BSP`
+### `split_recursive(depth: int, min_size: tuple[int, int], max_ratio: float = 1.5, seed: int | None = None) -> BSP` {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}split_recursive(depth: int, min_size: tuple[int, int], max_ratio: float = 1.5, seed: int | None = None) -> BSP
 
-Recursively split to the specified depth. WARNING: Invalidates all existing BSPNode references from this tree.
+Recursively split to the specified depth, replacing any existing children. WARNING: Invalidates all existing BSPNode references from this tree.
 
 Args:
     depth: Maximum recursion depth (1-16). Creates up to 2^depth leaves.

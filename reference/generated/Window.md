@@ -6,7 +6,7 @@ mcrf:
     - Window
   diataxis: reference
   source: generated
-  verified: 0.3.5
+  verified: 0.3.6
   verified_commit: ""
 ---
 
@@ -62,7 +62,7 @@ Note:
     This is a class method. Call as Window.get(). There is only one window instance per application.
 {% endraw %}
 
-### `screenshot(filename: str = None) -> bytes | None`
+### `screenshot(filename: str = None) -> bytes | None` {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}screenshot(filename: str = None) -> bytes | None
 
@@ -75,5 +75,5 @@ Returns:
     bytes | None: Raw RGBA pixel data if no filename given, otherwise None after saving
 
 Note:
-    Screenshot is taken at the actual window resolution. Use after render loop update for current frame.
+    Taken at the actual window resolution. Captures the last complete frame, never a mid-frame render: a second call after changing objects, with no frame in between, returns the same image, and in a Timer callback you get the previous frame. If no frame has been rendered yet in this process, the first call renders one, so a script that builds a scene and shoots at once gets the scene. Headless step() and advance() do not draw: a headless screenshot after a step draws the scene as it is at the time of the shot, and further calls with no step in between return that image again. Raises RuntimeError if called while a frame is being rendered (e.g. from a warnings hook): there is no complete frame yet.
 {% endraw %}

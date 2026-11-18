@@ -6,7 +6,7 @@ mcrf:
     - Entity
   diataxis: reference
   source: generated
-  verified: 0.3.5
+  verified: 0.3.6
   verified_commit: ""
 ---
 
@@ -58,9 +58,9 @@ Attributes:
 | `default_behavior` | {% raw %}Default behavior type (int, maps to Behavior enum). Entity reverts to this after DONE trigger. Default: 0 (IDLE).{% endraw %} |
 | `draw_pos` {% include api_badge.html kind="changed" version="0.3.2-dev" %} | {% raw %}Fractional tile position for rendering (Vector). Where the sprite is drawn, nothing more: it does not change the logical cell (grid_pos) or what spatial queries find. Animate it for smooth movement between cells; setting grid_pos snaps it to the cell.{% endraw %} |
 | `grid` | {% raw %}Grid this entity belongs to (Grid or None). Assign a Grid to attach the entity, or None to remove it from its current grid.{% endraw %} |
-| `grid_pos` {% include api_badge.html kind="changed" version="0.3.2-dev" %} | {% raw %}Integer logical cell position (Vector). Canonical cell-position property matching the 'grid_pos' constructor argument. Determines which cell this entity occupies for collision, pathfinding, GridPoint.entities and entities_in_radius. Setting it teleports: draw_pos snaps to the new cell (as grid.step() does); for smooth movement animate draw_pos. Accepts a Vector or (x, y) of ints or whole-number floats; a fractional value raises ValueError.{% endraw %} |
-| `grid_x` {% include api_badge.html kind="changed" version="0.3.2-dev" %} | {% raw %}Integer X cell coordinate (int). Canonical; matches grid_pos. Setting it teleports (draw_pos snaps to the cell). Accepts an int or a whole-number float (5.0); a fractional float raises ValueError.{% endraw %} |
-| `grid_y` {% include api_badge.html kind="changed" version="0.3.2-dev" %} | {% raw %}Integer Y cell coordinate (int). Canonical; matches grid_pos. Setting it teleports (draw_pos snaps to the cell). Accepts an int or a whole-number float (5.0); a fractional float raises ValueError.{% endraw %} |
+| `grid_pos` {% include api_badge.html kind="changed" version="0.3.6-dev" %} | {% raw %}Integer logical cell position (Vector). Canonical cell-position property matching the 'grid_pos' constructor argument. Determines which cell this entity occupies for collision, pathfinding, GridPoint.entities and entities_in_radius. Setting it teleports: draw_pos snaps to the new cell (as grid.step() does); for smooth movement animate draw_pos. Accepts a Vector or a 2-sequence of numbers; fractional values are floored (2.7 -> 2, -0.5 -> -1); nan/inf raises ValueError, a value outside int range OverflowError.{% endraw %} |
+| `grid_x` {% include api_badge.html kind="changed" version="0.3.6-dev" %} | {% raw %}Integer X cell coordinate (int). Canonical; matches grid_pos. Setting it teleports (draw_pos snaps to the cell). Accepts an int or a float, which is floored (5.7 -> 5); nan/inf raises ValueError, a value outside int range OverflowError.{% endraw %} |
+| `grid_y` {% include api_badge.html kind="changed" version="0.3.6-dev" %} | {% raw %}Integer Y cell coordinate (int). Canonical; matches grid_pos. Setting it teleports (draw_pos snaps to the cell). Accepts an int or a float, which is floored (5.7 -> 5); nan/inf raises ValueError, a value outside int range OverflowError.{% endraw %} |
 | `labels` | {% raw %}String labels for collision and targeting (frozenset). Assign any iterable of strings to replace all labels.{% endraw %} |
 | `move_speed` | {% raw %}Animation duration for behavior movement in seconds (float). 0 = instant. Default: 0.15.{% endraw %} |
 | `name` | {% raw %}Entity name for lookup (str).{% endraw %} |

@@ -6,7 +6,7 @@ mcrf:
     - Grid
   diataxis: reference
   source: generated
-  verified: 0.3.5
+  verified: 0.3.6
   verified_commit: ""
 ---
 
@@ -50,7 +50,7 @@ Keyword Args:
 | `align` | {% raw %}Alignment relative to parent bounds (Alignment enum or None). When set, position is automatically calculated when parent is assigned or resized. Set to None to disable alignment and use manual positioning.{% endraw %} |
 | `bounds` | {% raw %}Axis-aligned bounding box (tuple, read-only) as a (pos, size) pair of Vectors: (Vector(x, y), Vector(width, height)).{% endraw %} |
 | `camera_rotation` | {% raw %}Rotation of grid contents around camera center in degrees (float).{% endraw %} |
-| `center` | {% raw %}Camera center point in pixel coordinates (Vector).{% endraw %} |
+| `center` {% include api_badge.html kind="changed" version="0.3.6-dev" %} | {% raw %}Camera center point in pixel coordinates (Vector). Setting a centre beyond +/-536870911 raises ValueError; an animation that passes it is capped at the limit for those ticks.{% endraw %} |
 | `center_x` | {% raw %}Camera center X-coordinate in pixel space (float).{% endraw %} |
 | `center_y` | {% raw %}Camera center Y-coordinate in pixel space (float).{% endraw %} |
 | `children` {% include api_badge.html kind="added" version="0.2.8-dev" %} | {% raw %}UICollection of UIDrawable children such as speech bubbles, effects, and range indicators anchored to grid content (UICollection, read-only).{% endraw %} |
@@ -89,11 +89,11 @@ Keyword Args:
 | `x` | {% raw %}Top-left corner X-coordinate (float).{% endraw %} |
 | `y` | {% raw %}Top-left corner Y-coordinate (float).{% endraw %} |
 | `z_index` | {% raw %}Z-order for rendering (int). Lower values are rendered first.{% endraw %} |
-| `zoom` | {% raw %}Zoom level for rendering (float). Values greater than 1.0 magnify; less than 1.0 shrink.{% endraw %} |
+| `zoom` {% include api_badge.html kind="changed" version="0.3.6-dev" %} | {% raw %}Zoom level for rendering (float). Values greater than 1.0 magnify; less than 1.0 shrink. Setting a zoom below size / 536870911 raises ValueError; an animation that overshoots below it (back, elastic) displays that minimum for those ticks.{% endraw %} |
 
 ## Methods
 
-### `animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation` {% include api_badge.html kind="changed" version="0.3.4-dev" %}
+### `animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation` {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation
 
@@ -120,6 +120,9 @@ Raises:
 
 Note:
     This is a convenience method that creates an Animation, starts it, and adds it to the AnimationManager.
+
+Note:
+    A Grid camera value (zoom, size, center) whose END value is outside its limits raises ValueError; an elastic or back easing that overshoots a limit shows the limit value for those ticks, then rejoins its curve.
 {% endraw %}
 
 ### `center_camera(pos: tuple = None) -> None` {% include api_badge.html kind="added" version="0.2.8-dev" %} {% include api_badge.html kind="changed" version="0.3.5-dev" %}

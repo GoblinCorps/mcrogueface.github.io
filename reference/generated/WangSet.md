@@ -6,7 +6,7 @@ mcrf:
     - WangSet
   diataxis: reference
   source: generated
-  verified: 0.3.5
+  verified: 0.3.6
   verified_commit: ""
 ---
 

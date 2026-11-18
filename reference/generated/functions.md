@@ -6,7 +6,7 @@ mcrf:
     - Module Functions
   diataxis: reference
   source: generated
-  verified: 0.3.5
+  verified: 0.3.6
   verified_commit: ""
 ---
 
@@ -14,7 +14,7 @@ mcrf:
 
 Top-level functions in the `mcrfpy` module.
 
-## `mcrfpy.advance(ms: int) -> int` {% include api_badge.html kind="added" version="0.2.8-dev" %} {% include api_badge.html kind="changed" version="0.2.8-dev" %}
+## `mcrfpy.advance(ms: int) -> int` {% include api_badge.html kind="added" version="0.2.8-dev" %} {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}advance(ms: int) -> int
 
@@ -45,7 +45,7 @@ Raises:
     OverflowError: ms would carry the clock past its int-millisecond range
 
 Raises:
-    RuntimeError: Called from a background thread that currently holds mcrfpy.lock(), or from a thread that does not drive the clock; see step().
+    RuntimeError: Called from a background thread that currently holds mcrfpy.lock(), from a thread that does not drive the clock, or from inside a running frame (any callback, headless or windowed); see step(). A callback's sys.exit() ends advance() with the SystemExit, as for step().
 
 See also: The frame barrier: rules, budget, and failure modes (docs/frame-lock.md)
 {% endraw %}
@@ -134,7 +134,7 @@ Note:
     Example: find_all('enemy*') finds all elements starting with 'enemy', find_all('*_button') finds all elements ending with '_button'
 {% endraw %}
 
-## `mcrfpy.get_metrics() -> dict` {% include api_badge.html kind="changed" version="0.2.8-dev" %}
+## `mcrfpy.get_metrics() -> dict` {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}get_metrics() -> dict
 
@@ -142,7 +142,7 @@ Get current performance metrics.
 
 
 Returns:
-    dict: Performance data with keys: frame_time (last frame duration in MILLISECONDS), avg_frame_time (rolling mean frame time over the last 60 frames, in milliseconds), fps (frames per second, derived from avg_frame_time -- a rolling average, not an instantaneous rate), draw_calls (number of draw calls), ui_elements (total UI element count), visible_elements (visible element count), current_frame (frame counter), runtime (WALL-CLOCK seconds since engine start), simulation_time_ms (SIMULATED milliseconds, the deterministic counter advanced only by step()/advance() and the clock headless timers run on), grid_render_time (grid rendering time in ms), entity_render_time (entity rendering time in ms), fov_overlay_time (FOV overlay rendering time in ms), python_time (Python script execution time in ms), animation_time (animation processing time in ms), grid_cells_rendered (grid cell draws this frame, counted per layer), entities_rendered (number of entities drawn this frame), total_entities (total entity count across all rendered grids), audio_sources (Sound and Music objects alive), audio_playing (those the engine is keeping alive because they are playing)
+    dict: Performance data with keys: frame_time (last frame duration in MILLISECONDS), avg_frame_time (rolling mean frame time over the last 60 frames, in milliseconds), fps (frames per second, derived from avg_frame_time -- a rolling average, not an instantaneous rate), draw_calls (number of draw calls), ui_elements (total UI element count), visible_elements (visible element count), current_frame (frame counter), runtime (WALL-CLOCK seconds since engine start), simulation_time_ms (SIMULATED milliseconds, the deterministic counter advanced only by step()/advance() and the clock headless timers run on), grid_render_time (grid rendering time in ms), entity_render_time (entity rendering time in ms), fov_overlay_time (FOV overlay rendering time in ms), python_time (Python script execution time in ms), animation_time (animation processing time in ms), grid_cells_rendered (grid cell draws this frame, counted per layer), grid_chunks_repainted (layer chunk textures repainted this frame, counted per layer), entities_rendered (number of entities drawn this frame), total_entities (total entity count across all rendered grids), audio_sources (Sound and Music objects alive), audio_playing (those the engine is keeping alive because they are playing), lock_waiting (threads blocked in mcrfpy.lock() right now), lock_windows (safe windows opened since start: one per frame that had a waiter), lock_admissions (mcrfpy.lock() holders admitted since start; nested acquires excluded). The lock_* values are live, and are counts, so contention can be checked without a clock
 
 Note:
     All per-frame counters and timing breakdowns describe the last COMPLETED frame. Python callbacks run before the frame is rendered, so the in-progress frame's values are not available yet; frame_time, fps, runtime, simulation_time_ms and current_frame are live.
@@ -165,7 +165,7 @@ Note:
     Calling this before any randomness is consumed fixes the seed for the rest of the process -- it materialises the value rather than reporting a placeholder. Record it in a run log if reproducibility matters.
 {% endraw %}
 
-## `mcrfpy.lock() -> _LockContext` {% include api_badge.html kind="changed" version="0.2.8-dev" %}
+## `mcrfpy.lock() -> _LockContext` {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}lock() -> _LockContext
 
@@ -179,7 +179,13 @@ Note:
     Any access to mcrfpy objects from a non-main thread must happen inside `with mcrfpy.lock():`; behavior outside the lock is undefined. On a worker thread the context manager blocks (GIL released) until the render loop opens a safe window between frames. On the thread that drives the clock (the main thread, unless a background thread runs frames with step()/advance()) it is a no-op.
 
 Note:
+    EVERY non-nested lock() waits for the NEXT safe window, even if one is open right now: up to one frame, or until the next step()/advance() when headless. A window serves each waiting thread once, so a thread that releases and re-acquires gets one acquire per frame. A holder that waits, inside its block, for another thread's lock() deadlocks (that thread cannot enter until the holder leaves).
+
+Note:
     INSIDE THE LOCK, MUTATE ONLY. The main thread parks until every holder releases, so hold time is added to frame time roughly 1:1 -- a 10 ms hold costs the frame 10 ms, and presents as engine stutter rather than as a misbehaving handler. Do I/O, waiting, and computation OUTSIDE the block and apply the result inside it. Calling mcrfpy.step() or mcrfpy.advance() while holding the lock raises RuntimeError rather than deadlocking.
+
+Note:
+    Once the engine is shutting down, lock() on a thread that would have to wait raises RuntimeError('engine is shutting down'), including in a thread that was already waiting, and never grants the lock. This starts when the exiting main thread begins joining threads -- or, if another thread drives the clock, when that thread ends (at once if that thread is a daemon). The clock owner's lock stays a no-op throughout. A SystemExit raised on a background thread that drives the clock (from step() re-raising a callback's sys.exit()) ends only that thread.
 
 See also: The frame barrier: rules, budget, and failure modes (docs/frame-lock.md)
 {% endraw %}
@@ -277,7 +283,7 @@ Note:
     Benchmark filename is auto-generated from PID and timestamp. Use end_benchmark() to stop and get filename.
 {% endraw %}
 
-## `mcrfpy.step(dt: float = None) -> float` {% include api_badge.html kind="changed" version="0.2.8-dev" %}
+## `mcrfpy.step(dt: float = None) -> float` {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}step(dt: float = None) -> float
 
@@ -287,7 +293,7 @@ Args:
     dt: Time to advance in seconds, finite and >= 0. If None, advances to the next scheduled event (timer/animation).
 
 Returns:
-    float: Actual time advanced in seconds. Returns 0.0 in windowed mode.
+    float: Actual time advanced in seconds. Returns 0.0 in windowed mode (when called outside a frame).
 
 Note:
     Rendering is deliberately excluded: it is orthogonal to the clock and costs zero simulation time, so a screenshot draws arbitrary state without time passing. In windowed mode this is a no-op returning 0.0. Timers run on simulation time -- explicit, deterministic time is the point of driving a headless test with step().
@@ -305,10 +311,16 @@ Raises:
     OverflowError: dt would carry the clock past its int-millisecond range
 
 Raises:
-    RuntimeError: Called from a background thread that currently holds mcrfpy.lock(). Advancing a frame from inside the lock re-enters the frame the lock synchronises with, which cannot complete until the caller releases. Inside the lock, mutate only. (lock() is a no-op on the thread that drives the clock, so this cannot fire from script init or a timer callback.)
+    RuntimeError: Called from a background thread that currently holds mcrfpy.lock(). Advancing a frame from inside the lock re-enters the frame the lock synchronises with, which cannot complete until the caller releases. Inside the lock, mutate only. (lock() is a no-op on the thread that drives the clock, so this cannot fire on it.)
+
+Raises:
+    RuntimeError: Called from inside a running frame -- a timer, animation, input, scene or behaviour callback, headless or windowed (the message says a frame is already in progress). A frame cannot be re-entered (#551). In windowed mode this used to return 0.0.
 
 Raises:
     RuntimeError: Called from a thread that does not drive the simulation clock. The first thread to run a frame owns the clock until it exits (#411).
+
+Note:
+    sys.exit() raised in a callback during the frame does not finalize the interpreter mid-frame: the frame stops dispatching and unwinds, and step() re-raises the SystemExit to its caller (#557). If a background thread drives the clock, that caller is the thread, and, as for any SystemExit outside the main thread, it only ends that thread. A sys.exit() raised in a callback dispatched for another thread (one holding mcrfpy.lock() that called automation.*) is not raised there: it is deferred to the clock owner, which exits the process when its frame unwinds. Under -i, as for a top-level sys.exit() in this engine, a callback's sys.exit() is printed and the game carries on.
 
 See also: The frame barrier: rules, budget, and failure modes (docs/frame-lock.md)
 {% endraw %}

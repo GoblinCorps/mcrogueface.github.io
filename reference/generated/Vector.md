@@ -6,19 +6,24 @@ mcrf:
     - Vector
   diataxis: reference
   source: generated
-  verified: 0.3.5
+  verified: 0.3.6
   verified_commit: ""
 ---
 
-# Vector
+# Vector {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
-{% raw %}Vector(x: float = 0, y: float = 0)
+{% raw %}Vector(), Vector(x: float, y: float), or Vector((x, y))
 
 2D vector for positions, sizes, and directions.
 
 Args:
     x: X component.
     y: Y component.
+
+Vector() is (0, 0). One number or None is not a vector (TypeError). A component is an
+int, float, or anything with __index__ or __float__ (numpy scalars, Fraction, Decimal).
+Vector is a math type: Vector(nan, 1) and Vector(inf, 0) are accepted; a nan or
+infinite component is rejected where it is STORED (a position, size, ... property).
 
 Supports arithmetic (+, -, *, /), abs(), len() == 2,
 indexing ([0] for x, [1] for y), hashing, and equality.

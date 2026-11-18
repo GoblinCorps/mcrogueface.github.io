@@ -6,7 +6,7 @@ mcrf:
     - Viewport3D
   diataxis: reference
   source: generated
-  verified: 0.3.5
+  verified: 0.3.6
   verified_commit: ""
 ---
 
@@ -120,7 +120,7 @@ Args:
     voxel_grid: VoxelGrid object to render
     z_index: Render order (lower = rendered first){% endraw %}
 
-### `animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation` {% include api_badge.html kind="changed" version="0.3.4-dev" %}
+### `animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation` {% include api_badge.html kind="changed" version="0.3.6-dev" %}
 
 {% raw %}animate(property: str, target: Any, duration: float, easing=None, delta=False, loop=False, callback=None, conflict_mode='replace') -> Animation
 
@@ -147,6 +147,9 @@ Raises:
 
 Note:
     This is a convenience method that creates an Animation, starts it, and adds it to the AnimationManager.
+
+Note:
+    A Grid camera value (zoom, size, center) whose END value is outside its limits raises ValueError; an elastic or back easing that overshoots a limit shows the limit value for those ticks, then rejoins its curve.
 {% endraw %}
 
 ### `apply_heightmap(heightmap, y_scale=1.0)`
