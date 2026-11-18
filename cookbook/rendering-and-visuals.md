@@ -29,6 +29,7 @@ How to create and display visual elements in McRogueFace.
 
 ### Creating UI Elements
 
+<!-- snippet: 172_rendering_and_visuals_1 -->
 ```python
 import mcrfpy
 
@@ -55,6 +56,7 @@ ui.append(sprite)
 
 mcrfpy.current_scene = scene
 ```
+<!-- /snippet -->
 
 ---
 
@@ -62,21 +64,24 @@ mcrfpy.current_scene = scene
 
 ### Loading Textures
 
+<!-- snippet: 430_rendering_and_visuals_3 region=load-texture -->
 ```python
 # Load a sprite sheet with tile dimensions
-texture = mcrfpy.Texture("assets/sprites/tileset.png", 16, 16)
+texture = mcrfpy.Texture("assets/kenney_tinydungeon.png", 16, 16)
 
 # Use with sprite
 sprite = mcrfpy.Sprite(x=100, y=100)
 sprite.texture = texture
 sprite.sprite_index = 5  # Use 6th sprite (0-indexed)
 ```
+<!-- /snippet -->
 
 ### Sprite Sheets with Grids
 
+<!-- snippet: 430_rendering_and_visuals_3 region=sheet-grid -->
 ```python
 # Load tileset for grid layers
-texture = mcrfpy.Texture("assets/sprites/tileset.png", 16, 16)
+texture = mcrfpy.Texture("assets/kenney_tinydungeon.png", 16, 16)
 terrain = mcrfpy.TileLayer(name="terrain", z_index=-1, texture=texture)
 
 grid = mcrfpy.Grid(grid_size=(50, 50), pos=(100, 100), size=(400, 400),
@@ -87,6 +92,7 @@ for x in range(50):
     for y in range(50):
         terrain.set((x, y), 0)  # Floor tile index
 ```
+<!-- /snippet -->
 
 ---
 
@@ -94,7 +100,10 @@ for x in range(50):
 
 Control render order with `z_index` (higher = front):
 
+<!-- snippet: 173_rendering_and_visuals_2 -->
 ```python
+import mcrfpy
+
 scene = mcrfpy.Scene("game")
 ui = scene.children
 
@@ -118,6 +127,7 @@ ui.append(hud)
 # Renders: background -> grid -> hud
 mcrfpy.current_scene = scene
 ```
+<!-- /snippet -->
 
 **Implementation:** Automatic sorting by z_index in `src/Scene.cpp::render()`
 
@@ -127,6 +137,7 @@ mcrfpy.current_scene = scene
 
 ### Color Creation
 
+<!-- snippet: 431_rendering_and_visuals_4 region=color-creation -->
 ```python
 # RGB
 red = mcrfpy.Color(255, 0, 0)
@@ -138,9 +149,11 @@ semi_transparent = mcrfpy.Color(255, 255, 255, 128)
 color = mcrfpy.Color(100, 150, 200, 255)
 # color.r, color.g, color.b, color.a
 ```
+<!-- /snippet -->
 
 ### Color Application
 
+<!-- snippet: 431_rendering_and_visuals_4 region=color-application -->
 ```python
 # Frame colors
 frame.fill_color = mcrfpy.Color(50, 50, 50)
@@ -152,6 +165,7 @@ caption.fill_color = mcrfpy.Color(255, 255, 0)  # Yellow text
 # Opacity
 sprite.opacity = 0.5  # 50% transparent
 ```
+<!-- /snippet -->
 
 ---
 
@@ -161,6 +175,7 @@ sprite.opacity = 0.5  # 50% transparent
 
 See the Animation System documentation for complete animation details.
 
+<!-- snippet: 432_rendering_and_visuals_5 region=animations -->
 ```python
 # Fade in
 frame.animate("opacity", 1.0, 1.0, mcrfpy.Easing.EASE_IN_QUAD)
@@ -177,9 +192,11 @@ def on_done(target, prop, value):
     print(f"{prop} reached {value}")
 frame.animate("x", 500.0, 0.3, mcrfpy.Easing.EASE_OUT_CUBIC, callback=on_done)
 ```
+<!-- /snippet -->
 
 ### Visibility
 
+<!-- snippet: 432_rendering_and_visuals_5 region=visibility -->
 ```python
 # Show/hide elements
 sprite.visible = False  # Hidden
@@ -190,6 +207,7 @@ sprite.opacity = 0.0   # Invisible
 sprite.opacity = 0.5   # Semi-transparent
 sprite.opacity = 1.0   # Opaque
 ```
+<!-- /snippet -->
 
 ---
 
@@ -197,6 +215,7 @@ sprite.opacity = 1.0   # Opaque
 
 ### HUD/UI Overlay
 
+<!-- snippet: 433_rendering_and_visuals_6 region=hud -->
 ```python
 def create_hud(scene):
     ui = scene.children
@@ -223,6 +242,7 @@ def update_hud(health_label, current_hp, max_hp):
     else:
         health_label.fill_color = mcrfpy.Color(0, 255, 0)    # Green
 ```
+<!-- /snippet -->
 
 ### Particle-Like Effects
 
@@ -258,6 +278,7 @@ def create_explosion(scene, x, y):
 
 ### Health Bars
 
+<!-- snippet: 433_rendering_and_visuals_6 region=health-bar -->
 ```python
 class HealthBar:
     def __init__(self, parent, pos, width, height, max_hp):
@@ -289,6 +310,7 @@ class HealthBar:
         elif ratio < 0.6:
             self.fg.fill_color = mcrfpy.Color(255, 255, 0)
 ```
+<!-- /snippet -->
 
 ---
 
@@ -298,9 +320,10 @@ See the Grid System documentation for complete grid details.
 
 ### Basic Grid
 
+<!-- snippet: 434_rendering_and_visuals_7 region=basic-grid -->
 ```python
 # Load tileset
-texture = mcrfpy.Texture("assets/sprites/tileset.png", 16, 16)
+texture = mcrfpy.Texture("assets/kenney_tinydungeon.png", 16, 16)
 terrain = mcrfpy.TileLayer(name="terrain", z_index=-1, texture=texture)
 
 # Create grid with layer
@@ -315,9 +338,11 @@ for x in range(50):
         else:
             terrain.set((x, y), 0)  # Floor
 ```
+<!-- /snippet -->
 
 ### Grid Viewport
 
+<!-- snippet: 434_rendering_and_visuals_7 region=viewport -->
 ```python
 # Zoom
 grid.zoom = 2.0
@@ -329,6 +354,7 @@ grid.center_camera((25, 25))
 grid.animate("zoom", 1.5, 1.0, mcrfpy.Easing.EASE_IN_OUT)
 grid.animate("center_x", 100.0, 1.0, mcrfpy.Easing.EASE_IN_OUT)
 ```
+<!-- /snippet -->
 
 ---
 
@@ -336,6 +362,7 @@ grid.animate("center_x", 100.0, 1.0, mcrfpy.Easing.EASE_IN_OUT)
 
 ### Minimize Draw Calls
 
+<!-- snippet: 435_rendering_and_visuals_8 region=draw-calls -->
 ```python
 # Good: Group related UI in Frames
 hud_frame = mcrfpy.Frame(pos=(0, 0), size=(800, 600))
@@ -346,15 +373,18 @@ hud_frame.children.append(label3)
 # Avoid: Many top-level UI elements
 # (Each top-level element is a separate draw call)
 ```
+<!-- /snippet -->
 
 ### Use Visibility
 
+<!-- snippet: 435_rendering_and_visuals_8 region=visibility -->
 ```python
 # Hide off-screen elements
 for element in all_elements:
     if not in_viewport(element):
         element.visible = False
 ```
+<!-- /snippet -->
 
 ### Reuse Textures
 

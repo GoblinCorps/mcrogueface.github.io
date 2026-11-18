@@ -15,6 +15,7 @@ Text that floats upward and fades out, commonly used for damage numbers, healing
 
 ## Quick Example
 
+<!-- snippet: 140_effects_floating_text -->
 ```python
 import mcrfpy
 
@@ -46,6 +47,7 @@ game_scene = mcrfpy.Scene("game")
 mcrfpy.current_scene = game_scene
 show_damage(game_scene, 400, 300, 42)
 ```
+<!-- /snippet -->
 
 ## Grid-Aware Floating Text
 

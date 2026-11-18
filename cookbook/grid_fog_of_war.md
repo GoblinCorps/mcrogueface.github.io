@@ -35,6 +35,7 @@ entity instead (see [Rendering with ColorLayer](#rendering-with-colorlayer) belo
 
 ## Quick Start
 
+<!-- snippet: 164_grid_fog_of_war_1 -->
 ```python
 import mcrfpy
 
@@ -56,6 +57,7 @@ grid.entities.append(player)
 grid.perspective = player
 grid.fov_radius = 10
 ```
+<!-- /snippet -->
 
 ---
 
@@ -65,6 +67,7 @@ Each entity tracks its own visibility in `entity.perspective_map`. Call
 `entity.update_visibility()` after the entity moves to recompute it (the engine also
 calls this automatically for entities driven by `grid.step()` behaviors):
 
+<!-- snippet: 377_grid_fog_of_war_3 region=fov -->
 ```python
 def update_fov():
     """Recompute FOV from the player's current position."""
@@ -81,6 +84,7 @@ def move_player(dx, dy):
         player.grid_pos = (new_x, new_y)
         update_fov()
 ```
+<!-- /snippet -->
 
 `grid.fov` selects the shadowcasting algorithm used by `update_visibility()`
 (`mcrfpy.FOV.BASIC` by default; see [FOV Algorithms](#fov-algorithms) below), and
@@ -94,6 +98,7 @@ def move_player(dx, dy):
 `ColorLayer` directly to the entity with `apply_perspective()`. Once bound, the layer
 is repainted every time you call `entity.update_visibility()`:
 
+<!-- snippet: 377_grid_fog_of_war_3 region=layer -->
 ```python
 # Add a color layer for FOV shading (behind tiles)
 color_layer = mcrfpy.ColorLayer(z_index=-1, name="fog")
@@ -110,11 +115,13 @@ color_layer.apply_perspective(
 # Recompute + repaint together
 player.update_visibility()
 ```
+<!-- /snippet -->
 
 ---
 
 ## Complete Example
 
+<!-- snippet: 165_grid_fog_of_war_2 -->
 ```python
 import mcrfpy
 
@@ -203,6 +210,7 @@ update_visibility()
 # Center camera on player
 grid.center_camera((player.grid_x + 0.5, player.grid_y + 0.5))
 ```
+<!-- /snippet -->
 
 ---
 
@@ -211,6 +219,7 @@ grid.center_camera((player.grid_x + 0.5, player.grid_y + 0.5))
 Query visibility state for game logic via the moving entity's `perspective_map`
 (0=unknown, 1=discovered, 2=visible), or the `entity.at()` convenience method:
 
+<!-- snippet: 377_grid_fog_of_war_3 region=queries -->
 ```python
 def is_tile_visible(x, y):
     """Check if a tile is currently visible to the player."""
@@ -224,6 +233,7 @@ def get_visible_enemies():
     """Return list of enemies the player can see."""
     return player.visible_entities()
 ```
+<!-- /snippet -->
 
 `entity.at(x, y)` returns the `GridPoint` at that cell only if it is currently VISIBLE
 to that entity's `perspective_map`, or `None` otherwise -- handy for "can I act on this
@@ -233,11 +243,13 @@ entity's FOV directly, without a manual scan.
 If you only need a one-off computation without per-entity memory (e.g. checking line of
 sight for a single spell), use the lower-level grid API instead:
 
+<!-- snippet: 377_grid_fog_of_war_3 region=oneoff -->
 ```python
 grid.compute_fov((player.grid_x, player.grid_y), radius=10, algorithm=mcrfpy.FOV.SHADOW)
 if grid.is_in_fov(target_x, target_y):
     ...
 ```
+<!-- /snippet -->
 
 ---
 
@@ -246,6 +258,7 @@ if grid.is_in_fov(target_x, target_y):
 McRogueFace supports multiple FOV algorithms via the `mcrfpy.FOV` enum, used by both
 `entity.update_visibility()` (via `grid.fov`) and `grid.compute_fov()`:
 
+<!-- snippet: 377_grid_fog_of_war_3 region=algorithms -->
 ```python
 # Shadowcasting (default) - fast and produces nice results
 grid.compute_fov((x, y), radius=10, algorithm=mcrfpy.FOV.SHADOW)
@@ -261,6 +274,7 @@ grid.compute_fov((x, y), radius=10, algorithm=mcrfpy.FOV.PERMISSIVE_4)
 
 # Other options: FOV.RESTRICTIVE, FOV.SYMMETRIC_SHADOWCAST
 ```
+<!-- /snippet -->
 
 To make `entity.update_visibility()` use a non-default algorithm, set it on the grid
 once: `grid.fov = mcrfpy.FOV.SHADOW`.

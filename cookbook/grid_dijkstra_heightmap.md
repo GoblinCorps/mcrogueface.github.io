@@ -23,6 +23,7 @@ A Dijkstra map stores the distance from every cell to a target point. Converting
 
 ## Quick Start
 
+<!-- snippet: 161_grid_dijkstra_heightmap_1 -->
 ```python
 import mcrfpy
 
@@ -45,11 +46,13 @@ hmap = dijkstra.to_heightmap()
 # Use the heights
 player_distance = hmap[(5, 5)]  # Distance from (5,5) to (10,10)
 ```
+<!-- /snippet -->
 
 ## API Reference
 
 ### Getting a Dijkstra Map
 
+<!-- snippet: 373_grid_dijkstra_heightmap_3 region=get_map -->
 ```python
 # From a grid, compute distances from a source point
 dijkstra = grid.get_dijkstra_map((source_x, source_y))
@@ -57,9 +60,11 @@ dijkstra = grid.get_dijkstra_map((source_x, source_y))
 # Query individual distances
 distance = dijkstra.distance((x, y))
 ```
+<!-- /snippet -->
 
 ### Converting to HeightMap
 
+<!-- snippet: 373_grid_dijkstra_heightmap_3 region=convert -->
 ```python
 # Basic conversion - the size of the map's window (the whole grid, unless the
 # grid is over 1023 on a side or you passed radius=)
@@ -78,9 +83,11 @@ hmap = dijkstra.to_heightmap(unreachable=999.0)
 # Custom output size
 hmap = dijkstra.to_heightmap(size=(width, height))
 ```
+<!-- /snippet -->
 
 ### HeightMap Access
 
+<!-- snippet: 373_grid_dijkstra_heightmap_3 region=access -->
 ```python
 # Get height at position
 height = hmap[(x, y)]
@@ -88,6 +95,7 @@ height = hmap[(x, y)]
 # HeightMaps also support standard operations
 # (see HeightMap documentation for full API)
 ```
+<!-- /snippet -->
 
 ## Common Patterns
 
@@ -95,6 +103,7 @@ height = hmap[(x, y)]
 
 Spawn harder enemies farther from the player's starting position:
 
+<!-- snippet: 373_grid_dijkstra_heightmap_3 region=spawn -->
 ```python
 def spawn_enemies(grid, player_start, enemy_count):
     """Spawn enemies with difficulty based on distance from start."""
@@ -120,11 +129,13 @@ def spawn_enemies(grid, player_start, enemy_count):
 
     return enemies
 ```
+<!-- /snippet -->
 
 ### Distance-Based Fog Intensity
 
 Create fog that's thicker farther from the player:
 
+<!-- snippet: 373_grid_dijkstra_heightmap_3 region=fog -->
 ```python
 def update_fog(grid, fog_layer, player_pos):
     """Update fog intensity based on distance from player."""
@@ -147,11 +158,13 @@ def update_fog(grid, fog_layer, player_pos):
 
             fog_layer.set((x, y), mcrfpy.Color(20, 20, 40, alpha))
 ```
+<!-- /snippet -->
 
 ### Visualizing Dijkstra as Color Gradient
 
 Debug pathfinding by visualizing distances as colors:
 
+<!-- snippet: 162_grid_dijkstra_heightmap_2 region=visualize -->
 ```python
 def visualize_dijkstra(grid, color_layer, source):
     """Render dijkstra distances as a color gradient."""
@@ -189,11 +202,13 @@ def visualize_dijkstra(grid, color_layer, source):
 
             color_layer.set((x, y), color)
 ```
+<!-- /snippet -->
 
 ### River/Path Carving with Distance Fields
 
 Use distance from multiple points to carve natural-looking paths:
 
+<!-- snippet: 373_grid_dijkstra_heightmap_3 region=river -->
 ```python
 def carve_river(grid, source, destination):
     """Carve a river-like path between two points."""
@@ -233,11 +248,13 @@ def carve_river(grid, source, destination):
 
     return path
 ```
+<!-- /snippet -->
 
 ### Influence Map for AI
 
 Create an influence map showing areas controlled by different factions:
 
+<!-- snippet: 373_grid_dijkstra_heightmap_3 region=influence -->
 ```python
 def create_influence_map(grid, player_pos, enemy_positions):
     """Create influence map for AI decision-making."""
@@ -272,6 +289,7 @@ def create_influence_map(grid, player_pos, enemy_positions):
 
     return influence
 ```
+<!-- /snippet -->
 
 > **Tip:** `grid.get_dijkstra_map(root, roots=[...])` also accepts multiple
 > source points natively, which is the built-in way to get "distance to the

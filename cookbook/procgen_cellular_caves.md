@@ -34,9 +34,11 @@ Unlike BSP dungeons (rectangular rooms + corridors), cellular caves produce flow
 
 ## Quick Start
 
+<!-- snippet: 170_procgen_cellular_caves region=generate -->
 ```python
 import mcrfpy
 import random
+
 
 def generate_caves(grid, fill_chance=0.45, iterations=5):
     """Generate organic caves using cellular automata."""
@@ -90,6 +92,7 @@ def smooth_caves(grid):
                 cell.walkable = True
                 cell.tilesprite = 0
 ```
+<!-- /snippet -->
 
 ---
 
@@ -132,6 +135,7 @@ Each iteration smooths the noise into larger connected regions.
 
 After generation, use flood-fill to find and keep only the largest connected region:
 
+<!-- snippet: 170_procgen_cellular_caves region=largest -->
 ```python
 def find_largest_cave(grid):
     """Find the largest connected walkable region."""
@@ -184,6 +188,7 @@ def find_largest_cave(grid):
 
     return largest
 ```
+<!-- /snippet -->
 
 ---
 
@@ -191,6 +196,7 @@ def find_largest_cave(grid):
 
 Alternatively, connect separate cave regions with tunnels:
 
+<!-- snippet: 422_procgen_cellular_caves_2 region=connect -->
 ```python
 def connect_caves(grid, regions):
     """Connect separate cave regions with tunnels."""
@@ -238,6 +244,7 @@ def dig_tunnel(grid, start, end):
         cell.tilesprite = 0
         y += 1 if y2 > y1 else -1
 ```
+<!-- /snippet -->
 
 ---
 
@@ -252,6 +259,7 @@ The initial fill ratio dramatically changes cave character:
 | 55-60% | Tight tunnels and small chambers |
 | 65%+   | Mostly walls with isolated pockets |
 
+<!-- snippet: 423_procgen_cellular_caves_3 region=fill-ratios -->
 ```python
 # Open caverns
 generate_caves(grid, fill_chance=0.38, iterations=4)
@@ -262,6 +270,7 @@ generate_caves(grid, fill_chance=0.45, iterations=5)
 # Tight tunnels
 generate_caves(grid, fill_chance=0.55, iterations=6)
 ```
+<!-- /snippet -->
 
 ---
 
@@ -269,6 +278,7 @@ generate_caves(grid, fill_chance=0.55, iterations=6)
 
 Customize the automata rules for different effects:
 
+<!-- snippet: 423_procgen_cellular_caves_3 region=custom-rules -->
 ```python
 def smooth_caves_custom(grid, birth_limit=5, death_limit=4):
     """Customizable cellular automata rules.
@@ -305,6 +315,7 @@ def smooth_caves_custom(grid, birth_limit=5, death_limit=4):
                     cell.walkable = False
                     cell.tilesprite = 1
 ```
+<!-- /snippet -->
 
 ---
 
@@ -312,6 +323,7 @@ def smooth_caves_custom(grid, birth_limit=5, death_limit=4):
 
 Walk the grid directly to identify interesting cave features (dead ends, wide rooms, chokepoints). For distance-based variants — e.g. "how far is this cell from the entrance" — feed the map into a `DijkstraMap` via `grid.get_dijkstra_map(source)` and call `.distance((x, y))` or `.to_heightmap()` instead of the manual neighbor count below:
 
+<!-- snippet: 170_procgen_cellular_caves region=features -->
 ```python
 def find_cave_features(grid, spawn_point):
     """Find dead ends, wide areas, and chokepoints."""
@@ -347,11 +359,13 @@ def find_cave_features(grid, spawn_point):
         'chokepoints': chokepoints   # Good for traps, doors
     }
 ```
+<!-- /snippet -->
 
 ---
 
 ## Complete Example
 
+<!-- snippet: 424_procgen_cellular_caves_4 region=complete -->
 ```python
 import mcrfpy
 import random
@@ -396,6 +410,7 @@ if features['wide_areas']:
 
 grid.center_camera(spawn)
 ```
+<!-- /snippet -->
 
 ---
 

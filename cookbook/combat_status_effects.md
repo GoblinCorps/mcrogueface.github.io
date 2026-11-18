@@ -17,6 +17,7 @@ Status effects add tactical depth to combat by applying temporary modifiers that
 
 ## Basic Status Effect
 
+<!-- snippet: 313_combat_status_effects_1 region=status_effect -->
 ```python
 class StatusEffect:
     """A temporary effect applied to an entity."""
@@ -54,11 +55,13 @@ class StatusEffect:
         if self.on_expire:
             self.on_expire(target)
 ```
+<!-- /snippet -->
 
 ## Effect Manager
 
 Track effects on entities:
 
+<!-- snippet: 313_combat_status_effects_1 region=effect_manager -->
 ```python
 class EffectManager:
     """Manages status effects for an entity."""
@@ -118,6 +121,7 @@ class EffectManager:
             effect.expire(self.owner)
         self.effects.clear()
 ```
+<!-- /snippet -->
 
 ## Common Effect Types
 
@@ -173,6 +177,7 @@ def create_burning(damage=3, duration=3):
 
 ### Confusion
 
+<!-- snippet: 313_combat_status_effects_1 region=confusion -->
 ```python
 import random
 
@@ -200,9 +205,11 @@ def get_move_direction(entity):
     else:
         return entity.intended_direction
 ```
+<!-- /snippet -->
 
 ### Stun/Freeze
 
+<!-- snippet: 313_combat_status_effects_1 region=stun -->
 ```python
 def create_stun(duration=2):
     """Target cannot act."""
@@ -226,9 +233,11 @@ def process_turn(entity):
         return  # Skip turn
     # Normal turn processing...
 ```
+<!-- /snippet -->
 
 ### Stat Buffs/Debuffs
 
+<!-- snippet: 313_combat_status_effects_1 region=buffs -->
 ```python
 def create_strength_buff(bonus=5, duration=5):
     """Temporarily increase attack."""
@@ -273,9 +282,11 @@ def create_armor_buff(bonus=3, duration=5):
     return StatusEffect("armored", duration,
                        on_apply=on_apply, on_expire=on_expire)
 ```
+<!-- /snippet -->
 
 ### Regeneration
 
+<!-- snippet: 313_combat_status_effects_1 region=regeneration -->
 ```python
 def create_regeneration(heal_amount=2, duration=5):
     """Heal each turn."""
@@ -291,9 +302,11 @@ def create_regeneration(heal_amount=2, duration=5):
 
     return StatusEffect("regeneration", duration, on_tick=on_tick)
 ```
+<!-- /snippet -->
 
 ### Invisibility
 
+<!-- snippet: 313_combat_status_effects_1 region=invisibility -->
 ```python
 def create_invisibility(duration=5):
     """Enemies cannot see or target entity."""
@@ -322,6 +335,7 @@ def find_target(enemy, potential_targets):
     # Return nearest visible target
     return min(visible_targets, key=lambda t: distance_to(enemy, t))
 ```
+<!-- /snippet -->
 
 ## Entity Integration
 
@@ -525,13 +539,16 @@ def create_stacking_poison(base_damage=1, duration=5):
 1. **Effect Processing Order**: Process effects at turn start, before the entity acts
 
 2. **Cleanup on Death**: Clear effects when entity dies:
+   <!-- snippet: 313_combat_status_effects_1 region=tip_die -->
    ```python
    def die(self):
        self.effects.clear_all()
        # Rest of death logic...
    ```
+   <!-- /snippet -->
 
 3. **Resist/Immunity**: Add resistance checks:
+   <!-- snippet: 313_combat_status_effects_1 region=tip_immunity -->
    ```python
    def apply_effect(self, effect):
        if effect.name in self.immunities:
@@ -541,13 +558,16 @@ def create_stacking_poison(base_damage=1, duration=5):
            effect.duration //= 2  # Half duration
        self.effects.add_effect(effect)
    ```
+   <!-- /snippet -->
 
 4. **Save/Load**: Serialize effects for save games:
+   <!-- snippet: 313_combat_status_effects_1 region=tip_save -->
    ```python
    def serialize_effects(effect_manager):
        return [{"name": e.name, "duration": e.duration}
                for e in effect_manager.effects]
    ```
+   <!-- /snippet -->
 
 5. **Visual Clarity**: Always show effect icons and remaining duration to players
 

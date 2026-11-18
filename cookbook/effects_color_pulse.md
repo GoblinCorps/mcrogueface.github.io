@@ -19,6 +19,7 @@ writes it back with `layer.set((x, y), color)`.
 
 ## Quick Example
 
+<!-- snippet: 132_effects_color_pulse_1 -->
 ```python
 import mcrfpy
 import math
@@ -72,12 +73,14 @@ scene.children.append(grid)
 
 pulse_cell(grid, 5, 5, (255, 200, 0), duration=1.5)  # Golden pulse
 ```
+<!-- /snippet -->
 
 ## Continuous Pulsing
 
 Keep a cell pulsing until stopped, using a single repeating `Timer` driven by
 `math.sin` instead of chained one-shot animations:
 
+<!-- snippet: 133_effects_color_pulse_2 region=pulsing-cell -->
 ```python
 import mcrfpy
 import math
@@ -155,11 +158,13 @@ objective_pulse.start()
 # Later, when objective is reached:
 objective_pulse.stop()
 ```
+<!-- /snippet -->
 
 ## Multiple Pulsing Cells Manager
 
 Manage multiple pulsing effects:
 
+<!-- snippet: 134_effects_color_pulse_3 region=manager -->
 ```python
 import mcrfpy
 
@@ -238,11 +243,13 @@ pulses.remove(15, 10)
 # Clear all when changing levels
 pulses.clear()
 ```
+<!-- /snippet -->
 
 ## Area Pulse Effect
 
 Pulse a group of cells together with one shared timer:
 
+<!-- snippet: 135_effects_color_pulse_4 -->
 ```python
 import mcrfpy
 import math
@@ -334,6 +341,12 @@ class AreaPulse:
 
 
 # Usage
+scene = mcrfpy.Scene("demo")
+mcrfpy.current_scene = scene
+
+grid = mcrfpy.Grid(grid_size=(20, 16), pos=(0, 0), size=(512, 384))
+scene.children.append(grid)
+
 area = AreaPulse(grid)
 
 # Highlight a room
@@ -344,11 +357,13 @@ area.start_continuous(period=2.0)
 area.set_circle(10, 10, 3, (255, 100, 0))
 area.pulse_once(duration=0.8)
 ```
+<!-- /snippet -->
 
 ## Ripple Effect
 
 Animate an expanding ring of color, each ring fading independently:
 
+<!-- snippet: 136_effects_color_pulse_5 -->
 ```python
 import mcrfpy
 
@@ -408,8 +423,15 @@ def ripple_effect(grid, center_x, center_y, color, max_radius=5, duration=1.0):
 
 
 # Usage
-ripple_effect(grid, 10, 10, (100, 200, 255), max_radius=6, duration=0.8)
+scene = mcrfpy.Scene("demo")
+mcrfpy.current_scene = scene
+
+grid = mcrfpy.Grid(grid_size=(24, 24), pos=(0, 0), size=(512, 512))
+scene.children.append(grid)
+
+ripple_effect(grid, 12, 12, (100, 200, 255), max_radius=6, duration=0.8)
 ```
+<!-- /snippet -->
 
 ## Key Concepts
 

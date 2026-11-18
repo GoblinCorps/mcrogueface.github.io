@@ -24,6 +24,7 @@ The key technique is using a full-screen semi-transparent overlay to create the 
 
 ## Basic Implementation
 
+<!-- snippet: 198_ui_modal_dialog_1 -->
 ```python
 import mcrfpy
 
@@ -205,11 +206,13 @@ def on_key(key, state):
 scene.on_key = on_key
 scene.activate()
 ```
+<!-- /snippet -->
 
 ## Enhanced Dialog with Multiple Styles
 
 A more polished version with different dialog types and animations:
 
+<!-- snippet: 199_ui_modal_dialog_2 -->
 ```python
 import mcrfpy
 
@@ -543,11 +546,13 @@ def on_key(key, state):
 scene.on_key = on_key
 scene.activate()
 ```
+<!-- /snippet -->
 
 ## Dialog Manager for Queued Dialogs
 
 When multiple dialogs might be triggered, use a manager to queue them:
 
+<!-- snippet: 462_ui_modal_dialog_1 region=manager -->
 ```python
 import mcrfpy
 
@@ -619,6 +624,7 @@ manager.show("First", "This is the first message")
 manager.show("Second", "This appears after closing the first")
 manager.show("Third", "And this is last", ["Done"])
 ```
+<!-- /snippet -->
 
 ## McRogueFace-Specific Considerations
 

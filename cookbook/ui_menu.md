@@ -181,6 +181,7 @@ scene.activate()
 
 A more feature-rich version with option descriptions and submenu support:
 
+<!-- snippet: 193_ui_menu_2 -->
 ```python
 import mcrfpy
 
@@ -464,6 +465,7 @@ def handle_keys(key, state):
 scene.on_key = handle_keys
 scene.activate()
 ```
+<!-- /snippet -->
 
 ## Horizontal Menu Bar
 

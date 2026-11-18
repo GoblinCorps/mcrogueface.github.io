@@ -153,6 +153,7 @@ class WFC:
 
 Rules specify which tiles can be adjacent in each direction:
 
+<!-- snippet: 429_procgen_wfc_2 region=rules -->
 ```python
 # Simple path tiles
 # 0 = grass, 1 = path, 2 = water
@@ -178,6 +179,7 @@ rules = {
     }
 }
 ```
+<!-- /snippet -->
 
 ---
 
@@ -185,6 +187,7 @@ rules = {
 
 Generate coherent road patterns:
 
+<!-- snippet: 429_procgen_wfc_2 region=road -->
 ```python
 # Road tile indices
 GRASS = 0
@@ -237,6 +240,7 @@ wfc = WFC(grid, road_rules)
 success = wfc.collapse()
 print("Generation successful!" if success else "Contradiction occurred")
 ```
+<!-- /snippet -->
 
 ---
 
@@ -244,6 +248,7 @@ print("Generation successful!" if success else "Contradiction occurred")
 
 Generate proper wall configurations:
 
+<!-- snippet: 429_procgen_wfc_2 region=walls -->
 ```python
 # Wall tiles that connect correctly
 FLOOR = 0
@@ -280,6 +285,7 @@ wall_rules = {
     # ... similar rules for other edge/corner tiles
 }
 ```
+<!-- /snippet -->
 
 ---
 
@@ -287,6 +293,7 @@ wall_rules = {
 
 Force certain tiles in specific locations:
 
+<!-- snippet: 429_procgen_wfc_2 region=seed -->
 ```python
 def seed_wfc(wfc, constraints):
     """Pre-seed WFC with fixed tiles.
@@ -316,6 +323,7 @@ for pos in constraints:
 # Then collapse the rest
 wfc.collapse()
 ```
+<!-- /snippet -->
 
 ---
 
@@ -323,6 +331,7 @@ wfc.collapse()
 
 WFC can fail when constraints become impossible. Handle with retries:
 
+<!-- snippet: 429_procgen_wfc_2 region=retries -->
 ```python
 def generate_with_retries(grid, rules, max_attempts=10):
     """Generate with automatic retry on contradiction."""
@@ -379,6 +388,7 @@ class WFCBacktracking(WFC):
                 pos, old_poss, tried = history.pop()
                 self.possibilities[pos] = old_poss - tried
 ```
+<!-- /snippet -->
 
 ---
 
@@ -386,6 +396,7 @@ class WFCBacktracking(WFC):
 
 Make some tiles more common:
 
+<!-- snippet: 429_procgen_wfc_2 region=weighted -->
 ```python
 def collapse_weighted(self):
     """Collapse with weighted tile selection."""
@@ -424,11 +435,13 @@ def collapse_weighted(self):
 
     return self._propagate(x, y)
 ```
+<!-- /snippet -->
 
 ---
 
 ## Complete Example
 
+<!-- snippet: 436_procgen_wfc_3 region=complete -->
 ```python
 import mcrfpy
 import random
@@ -438,7 +451,7 @@ scene = mcrfpy.Scene("wfc_demo")
 scene.activate()
 mcrfpy.step(0.1)
 
-texture = mcrfpy.Texture("assets/terrain.png", 16, 16)  # or mcrfpy.default_texture
+texture = mcrfpy.Texture("assets/kenney_tinydungeon.png", 16, 16)  # or mcrfpy.default_texture
 grid = mcrfpy.Grid(grid_size=(30, 20), texture=texture,
                    pos=(0, 0), size=(480, 320))
 scene.children.append(grid)
@@ -481,6 +494,7 @@ for y in range(height):
         cell = grid.at((x, y))
         cell.walkable = cell.tilesprite != WATER
 ```
+<!-- /snippet -->
 
 ---
 

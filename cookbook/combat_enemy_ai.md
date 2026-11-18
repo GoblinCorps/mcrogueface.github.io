@@ -19,6 +19,7 @@ Entity tile position is read/written through `grid_x`/`grid_y` (or `grid_pos`) â
 
 ## Basic Chase AI
 
+<!-- snippet: 286_combat_enemy_ai_1 region=chase -->
 ```python
 import mcrfpy
 
@@ -47,11 +48,13 @@ def enemy_ai(enemy, player, grid):
             enemy.grid_x = next_x
             enemy.grid_y = next_y
 ```
+<!-- /snippet -->
 
 ## AI with Line of Sight
 
 Only chase when the player is visible:
 
+<!-- snippet: 286_combat_enemy_ai_1 region=sight -->
 ```python
 def enemy_ai_with_sight(enemy, player, grid, sight_range=8):
     """Chase player only when in sight range."""
@@ -112,11 +115,13 @@ def has_line_of_sight(grid, x1, y1, x2, y2):
 
     return True
 ```
+<!-- /snippet -->
 
 ## Wandering Behavior
 
 Random movement for when enemies don't see the player:
 
+<!-- snippet: 286_combat_enemy_ai_1 region=wander -->
 ```python
 import random
 
@@ -155,11 +160,13 @@ def is_occupied(x, y, entities=None):
             return True
     return False
 ```
+<!-- /snippet -->
 
 ## Multiple AI Behaviors
 
 Different enemy types with different behaviors:
 
+<!-- snippet: 286_combat_enemy_ai_1 region=behaviors -->
 ```python
 class AIBehavior:
     """Base class for AI behaviors."""
@@ -286,11 +293,13 @@ class HunterAI(AIBehavior):
 
         return ("wait", None)
 ```
+<!-- /snippet -->
 
 ## Processing AI Actions
 
 Execute the actions returned by AI behaviors:
 
+<!-- snippet: 286_combat_enemy_ai_1 region=actions -->
 ```python
 def process_ai_action(enemy, action, target, player, grid):
     """Execute an AI action."""
@@ -321,6 +330,7 @@ def run_all_enemy_ai(enemies, player, grid):
 
         process_ai_action(enemy_obj.entity, action, target, player, grid)
 ```
+<!-- /snippet -->
 
 ## Enemy Class with AI
 
@@ -377,12 +387,15 @@ lurker = Enemy(grid, 20, 20, enemy_texture, 1, hunter_ai)
 2. **Collision with Other Enemies**: Check `is_occupied()` before moving to prevent stacking
 
 3. **Diagonal Movement**: The default pathfinding may use diagonals. Filter path steps if you want 4-directional only:
+   <!-- snippet: 286_combat_enemy_ai_1 region=cardinal -->
    ```python
    # Filter to cardinal directions only
    path = [p for p in path if abs(p[0] - ex) + abs(p[1] - ey) == 1]
    ```
+   <!-- /snippet -->
 
 4. **Alert Radius**: When one enemy spots the player, alert nearby enemies:
+   <!-- snippet: 286_combat_enemy_ai_1 region=alert -->
    ```python
    def alert_nearby(x, y, radius, enemies):
        for enemy in enemies:
@@ -390,6 +403,7 @@ lurker = Enemy(grid, 20, 20, enemy_texture, 1, hunter_ai)
            if dist <= radius and hasattr(enemy.ai, 'alert'):
                enemy.ai.alert = True
    ```
+   <!-- /snippet -->
 
 5. **Blocked Paths**: If `path_to()` returns empty list, the target is unreachable. Handle gracefully.
 

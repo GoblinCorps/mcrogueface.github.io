@@ -29,11 +29,16 @@ Nine alignment positions are available:
 
 ## Quick Start
 
+<!-- snippet: 181_ui_alignment_1 -->
 ```python
 import mcrfpy
 
+scene = mcrfpy.Scene("ui_alignment_quickstart")
+mcrfpy.current_scene = scene
+
 # Create parent container
 parent = mcrfpy.Frame(pos=(100, 100), size=(400, 300))
+scene.children.append(parent)
 
 # Create centered child
 child = mcrfpy.Frame(pos=(0, 0), size=(100, 50))
@@ -44,11 +49,13 @@ child.align = mcrfpy.Alignment.CENTER
 parent.children.append(child)
 # child is now at (150, 125) - centered in the 400x300 parent
 ```
+<!-- /snippet -->
 
 ## Using Margins
 
 Add spacing from edges with the `margin` property:
 
+<!-- snippet: 182_ui_alignment_2 region=margin -->
 ```python
 # Health bar in top-left corner with 10px padding
 health_bar = mcrfpy.Frame(pos=(0, 0), size=(200, 30))
@@ -58,9 +65,11 @@ health_bar.margin = 10.0  # 10px from top and left edges
 parent.children.append(health_bar)
 # health_bar is now at (10, 10)
 ```
+<!-- /snippet -->
 
 Use `horiz_margin` and `vert_margin` for independent control:
 
+<!-- snippet: 182_ui_alignment_2 region=horiz-vert -->
 ```python
 # Element with different horizontal/vertical margins
 element = mcrfpy.Frame(pos=(0, 0), size=(100, 100))
@@ -70,6 +79,7 @@ element.vert_margin = 10.0   # 10px from bottom edge
 
 parent.children.append(element)
 ```
+<!-- /snippet -->
 
 **Note:** CENTER alignment does not support margins (the element is centered, so margins don't make sense). Setting margin on a centered element raises `ValueError`.
 
@@ -77,8 +87,15 @@ parent.children.append(element)
 
 Aligned children automatically reposition when their parent resizes:
 
+<!-- snippet: 183_ui_alignment_3 -->
 ```python
+import mcrfpy
+
+scene = mcrfpy.Scene("ui_alignment_reactive")
+mcrfpy.current_scene = scene
+
 parent = mcrfpy.Frame(pos=(0, 0), size=(200, 200))
+scene.children.append(parent)
 
 child = mcrfpy.Frame(pos=(0, 0), size=(50, 50))
 child.align = mcrfpy.Alignment.CENTER
@@ -92,12 +109,24 @@ parent.h = 400
 
 print(f"After resize: ({child.x}, {child.y})")  # (175, 175)
 ```
+<!-- /snippet -->
 
 ## Freezing Position
 
 Set `align = None` to freeze an element at its current position:
 
+<!-- snippet: 184_ui_alignment_4 -->
 ```python
+import mcrfpy
+
+scene = mcrfpy.Scene("ui_alignment_freeze")
+mcrfpy.current_scene = scene
+
+parent = mcrfpy.Frame(pos=(0, 0), size=(200, 200))
+scene.children.append(parent)
+
+child = mcrfpy.Frame(pos=(0, 0), size=(50, 50))
+
 # Center the element first
 child.align = mcrfpy.Alignment.CENTER
 parent.children.append(child)  # Positions at center
@@ -108,6 +137,7 @@ child.align = None
 # Now parent resizing won't move the child
 parent.w = 800  # child stays at its current position
 ```
+<!-- /snippet -->
 
 This is useful for elements that should be initially placed via alignment but then remain fixed.
 
@@ -115,7 +145,11 @@ This is useful for elements that should be initially placed via alignment but th
 
 ### Corner HUD Elements
 
+<!-- snippet: 185_ui_alignment_5 -->
 ```python
+import mcrfpy
+
+
 def create_hud(scene):
     """Create HUD with elements in each corner."""
     # Full-screen container
@@ -148,11 +182,21 @@ def create_hud(scene):
     hud.children.append(minimap)
 
     return hud
+
+
+scene = mcrfpy.Scene("ui_alignment_hud")
+mcrfpy.current_scene = scene
+create_hud(scene)
 ```
+<!-- /snippet -->
 
 ### Centered Modal Dialog
 
+<!-- snippet: 186_ui_alignment_6 -->
 ```python
+import mcrfpy
+
+
 def show_modal(scene, title, message):
     """Display a centered modal dialog."""
     # Overlay background
@@ -180,11 +224,21 @@ def show_modal(scene, title, message):
     dialog.children.append(msg_caption)
 
     return overlay
+
+
+scene = mcrfpy.Scene("ui_alignment_modal")
+mcrfpy.current_scene = scene
+show_modal(scene, "Game Over", "You have died.")
 ```
+<!-- /snippet -->
 
 ### Responsive Button Bar
 
+<!-- snippet: 187_ui_alignment_7 -->
 ```python
+import mcrfpy
+
+
 def create_button_bar(parent):
     """Create a button bar at the bottom-center."""
     bar = mcrfpy.Frame(pos=(0, 0), size=(300, 50))
@@ -209,7 +263,15 @@ def create_button_bar(parent):
         bar.children.append(btn)
 
     return bar
+
+
+scene = mcrfpy.Scene("ui_alignment_buttonbar")
+mcrfpy.current_scene = scene
+parent = mcrfpy.Frame(pos=(0, 0), size=(400, 300))
+scene.children.append(parent)
+create_button_bar(parent)
 ```
+<!-- /snippet -->
 
 ## Supported UI Elements
 

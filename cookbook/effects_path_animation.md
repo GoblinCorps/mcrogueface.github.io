@@ -17,6 +17,7 @@ properties were `draw_x`/`draw_y`; those names now raise `ValueError`.)
 
 ## Quick Example
 
+<!-- snippet: 141_effects_path_animation -->
 ```python
 import mcrfpy
 
@@ -79,17 +80,40 @@ class PathAnimator:
             self._animate_next()
 
 
+scene = mcrfpy.Scene("path_animation_demo")
+mcrfpy.current_scene = scene
+
+grid = mcrfpy.Grid(
+    grid_size=(16, 12),
+    texture=mcrfpy.default_texture,
+    pos=(0, 0),
+    size=(1024, 768),
+    zoom=4.0
+)
+scene.children.append(grid)
+
+for y in range(12):
+    for x in range(16):
+        cell = grid.at(x, y)
+        cell.tilesprite = 48
+        cell.walkable = True
+
+enemy = mcrfpy.Entity(grid_pos=(5, 5), texture=mcrfpy.default_texture, sprite_index=84)
+grid.entities.append(enemy)
+
 # Usage
 path = [(5, 5), (5, 8), (8, 8), (8, 5)]  # Square patrol route
 animator = PathAnimator(enemy, path, step_duration=0.3)
 animator.on_complete = lambda a: print("Patrol complete!")
 animator.start()
 ```
+<!-- /snippet -->
 
 ## Diagonal Movement Support
 
 Animate `draw_pos` straight to each waypoint, and both axes move together:
 
+<!-- snippet: 343_effects_path_animation_2 region=diagonal -->
 ```python
 import mcrfpy
 
@@ -143,11 +167,13 @@ path = [(2, 2), (5, 5), (8, 2), (5, 5)]  # Diamond pattern
 animator = DiagonalPathAnimator(entity, path, step_duration=0.4)
 animator.start()
 ```
+<!-- /snippet -->
 
 ## Looping Patrol Route
 
 Create an enemy that continuously patrols a route:
 
+<!-- snippet: 344_effects_path_animation_3 region=patrol -->
 ```python
 import mcrfpy
 
@@ -216,11 +242,13 @@ guard.start()
 # Later, to stop:
 # guard.stop()
 ```
+<!-- /snippet -->
 
 ## Path with Variable Speeds
 
 Different speeds for different path segments:
 
+<!-- snippet: 345_effects_path_animation_4 region=variable-speed -->
 ```python
 import mcrfpy
 
@@ -281,11 +309,13 @@ waypoints = [
 path = VariableSpeedPath(entity, waypoints)
 path.start()
 ```
+<!-- /snippet -->
 
 ## Pathfinding Integration
 
 Use with McRogueFace's built-in pathfinding:
 
+<!-- snippet: 346_effects_path_animation_5 region=pathfinding -->
 ```python
 import mcrfpy
 
@@ -324,11 +354,13 @@ animator = animate_to_target(player, grid, 15, 10)
 if animator:
     animator.on_complete = lambda a: print("Arrived at destination!")
 ```
+<!-- /snippet -->
 
 ## Camera Following Path
 
 Animate camera to follow the entity along the path:
 
+<!-- snippet: 347_effects_path_animation_6 region=camera -->
 ```python
 import mcrfpy
 
@@ -379,6 +411,7 @@ mover = CameraFollowingPath(player, grid, path)
 mover.on_complete = lambda m: print("Journey complete!")
 mover.start()
 ```
+<!-- /snippet -->
 
 ## Key Concepts
 
